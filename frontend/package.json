@@ -1,0 +1,27 @@
+{
+  "name": "orcestr-auth-frontend-workspace",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "clean": "node scripts/clean.mjs",
+    "build": "npm run clean && tsc -b",
+    "typecheck": "tsc -b --pretty false",
+    "test": "npm run build && node --test tests/*.test.mjs",
+    "pack:dry-run": "npm pack --dry-run --workspace @orcestr/auth-core && npm pack --dry-run --workspace @orcestr/auth-react && npm pack --dry-run --workspace @orcestr/auth-forms && npm pack --dry-run --workspace @orcestr/auth-next"
+  },
+  "devDependencies": {
+    "@orcestr/ui": "0.2.4",
+    "@tanstack/react-query": "5.99.2",
+    "@types/node": "25.6.0",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "next": "16.2.10",
+    "react": "19.2.5",
+    "react-dom": "19.2.5",
+    "typescript": "5.9.3"
+  }
+}

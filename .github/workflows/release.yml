@@ -1,0 +1,138 @@
+name: Orcestr Auth Release
+run-name: Orcestr Auth Release - ${{ github.ref_name }}
+
+on:
+  push:
+    tags:
+      - 'auth-v*'
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.value }}
+    steps:
+      - uses: actions/checkout@v6
+      - id: version
+        shell: bash
+        run: echo "value=${GITHUB_REF_NAME#auth-v}" >> "$GITHUB_OUTPUT"
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Check package versions against tag
+        shell: bash
+        env:
+          EXPECTED: ${{ steps.version.outputs.value }}
+        run: |
+          python - <<'PY'
+          import json, os, pathlib, tomllib
+
+          expected = os.environ["EXPECTED"]
+          backend = tomllib.loads(pathlib.Path("backend/pyproject.toml").read_text())["project"]["version"]
+          assert backend == expected, (backend, expected)
+          for package in pathlib.Path("frontend/packages").glob("*/package.json"):
+              version = json.loads(package.read_text())["version"]
+              assert version == expected, (package, version, expected)
+          PY
+      - name: Verify Python package
+        working-directory: backend
+        run: |
+          uv sync --frozen
+          uv run pytest -q
+          uv build
+      - name: Verify frontend packages
+        working-directory: frontend
+        run: |
+          npm ci
+          npm test
+          npm run pack:dry-run
+
+  pypi:
+    name: Publish Python package
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v6
+      - name: Build
+        run: uv build
+        working-directory: backend
+      - name: Publish orcestr-auth
+        run: uv publish
+        working-directory: backend
+
+  npm:
+    name: Publish npm packages
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Install and build
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+      - name: Publish @orcestr/auth-core
+        run: npm publish --workspace @orcestr/auth-core --access public --provenance
+        working-directory: frontend
+      - name: Publish @orcestr/auth-react
+        run: npm publish --workspace @orcestr/auth-react --access public --provenance
+        working-directory: frontend
+      - name: Publish @orcestr/auth-forms
+        run: npm publish --workspace @orcestr/auth-forms --access public --provenance
+        working-directory: frontend
+      - name: Publish @orcestr/auth-next
+        run: npm publish --workspace @orcestr/auth-next --access public --provenance
+        working-directory: frontend
+
+  github-release:
+    name: Create GitHub release
+    needs: [verify, pypi, npm]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+      - name: Create release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.verify.outputs.version }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "GitHub release $GITHUB_REF_NAME already exists."
+            exit 0
+          fi
+
+          gh release create "$GITHUB_REF_NAME" \
+            --verify-tag \
+            --latest \
+            --title "Orcestr Auth v${VERSION}" \
+            --notes "Python: https://pypi.org/project/orcestr-auth/${VERSION}/
+          npm core: https://www.npmjs.com/package/@orcestr/auth-core/v/${VERSION}
+          npm React: https://www.npmjs.com/package/@orcestr/auth-react/v/${VERSION}
+          npm forms: https://www.npmjs.com/package/@orcestr/auth-forms/v/${VERSION}
+          npm Next.js: https://www.npmjs.com/package/@orcestr/auth-next/v/${VERSION}" \
+            --generate-notes

@@ -1,0 +1,52 @@
+{
+  "name": "@orcestr/auth-forms",
+  "version": "0.1.0",
+  "description": "Ready authentication forms built with @orcestr/ui, without pages or routing ownership.",
+  "author": "Artasov",
+  "license": "MIT",
+  "keywords": [
+    "authentication",
+    "forms",
+    "orcestr",
+    "react",
+    "ui"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Artasov/orcestr-auth.git",
+    "directory": "frontend/packages/forms"
+  },
+  "homepage": "https://github.com/Artasov/orcestr-auth/tree/main/frontend/packages/forms#readme",
+  "bugs": {
+    "url": "https://github.com/Artasov/orcestr-auth/issues"
+  },
+  "type": "module",
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md",
+    "README.ru.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@orcestr/auth-core": "0.1.0",
+    "@orcestr/auth-react": "0.1.0"
+  },
+  "peerDependencies": {
+    "@orcestr/ui": "^0.2.4",
+    "@tanstack/react-query": "^5.99.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "scripts": {
+    "build": "tsc -b"
+  }
+}

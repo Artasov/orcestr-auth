@@ -1,0 +1,47 @@
+{
+  "name": "@orcestr/auth-next",
+  "version": "0.1.0",
+  "description": "Next.js proxy and server redirect helpers for Orcestr authentication.",
+  "author": "Artasov",
+  "license": "MIT",
+  "keywords": [
+    "authentication",
+    "middleware",
+    "nextjs",
+    "orcestr"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Artasov/orcestr-auth.git",
+    "directory": "frontend/packages/next"
+  },
+  "homepage": "https://github.com/Artasov/orcestr-auth/tree/main/frontend/packages/next#readme",
+  "bugs": {
+    "url": "https://github.com/Artasov/orcestr-auth/issues"
+  },
+  "type": "module",
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md",
+    "README.ru.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@orcestr/auth-core": "0.1.0"
+  },
+  "peerDependencies": {
+    "next": "^16.0.0"
+  },
+  "scripts": {
+    "build": "tsc -b"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "name": "@orcestr/auth-core",
+  "version": "0.1.0",
+  "description": "Framework-independent Orcestr authentication client and redirect helpers.",
+  "author": "Artasov",
+  "license": "MIT",
+  "keywords": [
+    "authentication",
+    "oauth",
+    "orcestr",
+    "pkce",
+    "typescript"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Artasov/orcestr-auth.git",
+    "directory": "frontend/packages/core"
+  },
+  "homepage": "https://github.com/Artasov/orcestr-auth/tree/main/frontend/packages/core#readme",
+  "bugs": {
+    "url": "https://github.com/Artasov/orcestr-auth/issues"
+  },
+  "type": "module",
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md",
+    "README.ru.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -b"
+  }
+}
