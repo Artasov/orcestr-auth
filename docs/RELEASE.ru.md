@@ -1,57 +1,116 @@
-# Релиз Orcestr Auth
+# Релизы Orcestr Auth
 
 [English version](./RELEASE.md)
 
-Один тег `auth-vX.Y.Z` выпускает Python-пакет и четыре npm-пакета. На первом beta-этапе они
-намеренно используют одну версию, чтобы общий контракт было легко проверять.
+Каждый пакет имеет независимую версию и отдельный релизный тег. Обновление одного пакета не
+переиздаёт остальные пакеты.
+
+| Пакет | Тег | Workflow |
+| --- | --- | --- |
+| `orcestr-auth` | `python-vX.Y.Z` | `.github/workflows/release.yml` |
+| `@orcestr/auth-core` | `auth-core-vX.Y.Z` | `.github/workflows/npm-release.yml` |
+| `@orcestr/auth-react` | `auth-react-vX.Y.Z` | `.github/workflows/npm-release.yml` |
+| `@orcestr/auth-forms` | `auth-forms-vX.Y.Z` | `.github/workflows/npm-release.yml` |
+| `@orcestr/auth-next` | `auth-next-vX.Y.Z` | `.github/workflows/npm-release.yml` |
 
 ## Однократная настройка
 
 - Репозиторий: `Artasov/orcestr-auth`.
-- PyPI project: `orcestr-auth` с Trusted Publishing для `.github/workflows/release.yml`.
-- npm packages: `@orcestr/auth-core`, `@orcestr/auth-react`, `@orcestr/auth-forms`,
-  `@orcestr/auth-next` с npm Trusted Publishing/provenance.
-- GitHub environments: `pypi` и `npm`, если нужны approval gates.
+- PyPI Pending или обычный Trusted Publisher:
+  - owner: `Artasov`;
+  - repository: `orcestr-auth`;
+  - workflow: `release.yml`;
+  - environment: `pypi`.
+- npm Trusted Publisher для каждого npm-пакета:
+  - organization/user: `Artasov`;
+  - repository: `orcestr-auth`;
+  - workflow: `npm-release.yml`;
+  - environment: `npm`.
+- GitHub environments: `pypi` и `npm`.
 
-## Перед релизом
+npm разрешает настроить Trusted Publishing только после появления пакета. Поэтому каждый
+npm-пакет первый раз публикуется вручную, после чего для него настраивается publisher. Python-пакет
+может быть создан первым запуском workflow через Pending Trusted Publisher в PyPI.
 
-1. Обновите версии в `backend/pyproject.toml` и каждом frontend package manifest.
-2. Обновите точные inter-package dependencies и оба lock-файла.
-3. Обновите `CHANGELOG.md` и package documentation.
-4. Запустите:
+## Релиз Python-пакета
+
+1. Обновите только `backend/pyproject.toml` и при необходимости `backend/uv.lock`.
+2. Обновите `CHANGELOG.md` и документацию backend.
+3. Проверьте пакет локально:
 
 ```powershell
 cd backend
 uv sync --frozen
 uv run pytest -q
-uv build
+uv build --no-sources
+```
 
-cd ..\frontend
+4. Закоммитьте релизное состояние и отправьте совпадающий тег:
+
+```powershell
+git tag -a python-v0.1.0 -m "orcestr-auth 0.1.0"
+git push origin main
+git push origin python-v0.1.0
+```
+
+Python workflow проверяет только версию backend, публикует пакет через PyPI OIDC и создаёт
+отдельный GitHub Release.
+
+## Релиз npm-пакета
+
+1. Обновите `version` только у выпускаемого пакета.
+2. Если изменились его внутренние зависимости, обновите их точные версии и выполните
+   `npm install`, чтобы пересобрать `frontend/package-lock.json`.
+3. Обновите `CHANGELOG.md` и документацию пакета.
+4. Проверьте frontend локально:
+
+```powershell
+cd frontend
 npm ci
 npm test
 npm run pack:dry-run
 ```
 
-5. Проверьте wheel/sdist и списки npm tarball: там не должно быть secrets, локальных paths или
-   пропущенных README.
-6. Закоммитьте release state и создайте совпадающий тег, например `auth-v0.1.0`.
+5. Закоммитьте изменения и отправьте тег нужного пакета. Например, релиз React-пакета:
 
-## Порядок workflow
+```powershell
+git tag -a auth-react-v0.1.1 -m "@orcestr/auth-react 0.1.1"
+git push origin main
+git push origin auth-react-v0.1.1
+```
 
-Release workflow:
+npm workflow определяет по тегу ровно один пакет, проверяет его версию, тестирует workspace,
+публикует только выбранный пакет с provenance и создаёт отдельный GitHub Release.
 
-1. проверяет совпадение версии каждого package с тегом;
-2. запускает backend и frontend tests/builds;
-3. собирает и публикует `orcestr-auth` в PyPI;
-4. публикует npm packages в порядке зависимостей: core, react, forms, next;
-5. создаёт GitHub Release только после успеха обоих registries.
+Внутренние зависимости намеренно зафиксированы точными версиями. Новая версия core не требует
+релиза React, forms или Next.js, пока им не понадобились изменения из новой версии core.
 
-Нельзя обновлять production manifests Orcestr до версии, которой ещё нет в registry.
+## Первая публикация npm
+
+Авторизуйтесь и опубликуйте пакеты из `frontend` в порядке зависимостей:
+
+```powershell
+npm login
+npm whoami
+npm ci
+npm test
+npm publish --workspace @orcestr/auth-core --access public
+npm publish --workspace @orcestr/auth-react --access public
+npm publish --workspace @orcestr/auth-forms --access public
+npm publish --workspace @orcestr/auth-next --access public
+```
+
+Когда все четыре пакета появились в npm, настройте Trusted Publishing для каждого из них. Не
+отправляйте четыре релизных тега версии `0.1.0` после ручной публикации: версии npm неизменяемы, и
+workflow попытается опубликовать их повторно. Автоматические релизы по тегам начинаются со
+следующей версии.
 
 ## После публикации
 
-1. Проверьте PyPI, четыре npm package pages и двуязычные README.
-2. Зафиксируйте точные версии в manifests Orcestr и пересоберите locks.
+1. Проверьте страницу в registry и двуязычный README выпущенного пакета.
+2. Зафиксируйте его точную версию в manifests Orcestr и пересоберите нужный lock-файл.
 3. Запустите `scripts/check-published-dependencies.ps1`.
-4. Соберите production images без sibling repositories.
-5. Запустите auth integration tests и только после этого deploy.
+4. Соберите затронутый production image без соседних репозиториев.
+5. Перед деплоем запустите относящиеся к изменению auth integration tests.
+
+Нельзя обновлять production manifests Orcestr до версии, которой ещё нет в registry.

@@ -134,9 +134,10 @@ packages without writing `file:` or editable paths into production manifests and
 
 ## Release
 
-Tags matching `auth-v*` publish the Python package to PyPI and the four npm packages in
-dependency order. The workflow verifies that every package version matches the tag, runs the
-test/build/package checks and uses Trusted Publishing/provenance.
+Packages are released independently. `python-v*` publishes only `orcestr-auth`; tags
+`auth-core-v*`, `auth-react-v*`, `auth-forms-v*` and `auth-next-v*` each publish only their
+matching npm package. The workflows verify the selected version, run the relevant checks and use
+Trusted Publishing/provenance.
 
 Full instructions: [docs/RELEASE.md](./docs/RELEASE.md).
 

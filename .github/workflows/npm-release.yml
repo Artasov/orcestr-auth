@@ -1,0 +1,149 @@
+name: Publish npm package
+run-name: Publish npm package - ${{ github.ref_name }}
+
+on:
+  push:
+    tags:
+      - 'auth-core-v*'
+      - 'auth-react-v*'
+      - 'auth-forms-v*'
+      - 'auth-next-v*'
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  contents: read
+
+jobs:
+  resolve:
+    name: Resolve npm release
+    runs-on: ubuntu-latest
+    outputs:
+      package_dir: ${{ steps.release.outputs.package_dir }}
+      package_name: ${{ steps.release.outputs.package_name }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - id: release
+        name: Resolve package and version from tag
+        shell: bash
+        run: |
+          case "$GITHUB_REF_NAME" in
+            auth-core-v*)
+              package_dir="frontend/packages/core"
+              package_name="@orcestr/auth-core"
+              version="${GITHUB_REF_NAME#auth-core-v}"
+              ;;
+            auth-react-v*)
+              package_dir="frontend/packages/react"
+              package_name="@orcestr/auth-react"
+              version="${GITHUB_REF_NAME#auth-react-v}"
+              ;;
+            auth-forms-v*)
+              package_dir="frontend/packages/forms"
+              package_name="@orcestr/auth-forms"
+              version="${GITHUB_REF_NAME#auth-forms-v}"
+              ;;
+            auth-next-v*)
+              package_dir="frontend/packages/next"
+              package_name="@orcestr/auth-next"
+              version="${GITHUB_REF_NAME#auth-next-v}"
+              ;;
+            *)
+              echo "Unsupported release tag: $GITHUB_REF_NAME" >&2
+              exit 1
+              ;;
+          esac
+
+          if [[ -z "$version" ]]; then
+            echo "Release version is empty" >&2
+            exit 1
+          fi
+
+          echo "package_dir=$package_dir" >> "$GITHUB_OUTPUT"
+          echo "package_name=$package_name" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  verify:
+    name: Verify ${{ needs.resolve.outputs.package_name }}
+    needs: resolve
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Check package version against tag
+        shell: bash
+        working-directory: frontend
+        env:
+          EXPECTED: ${{ needs.resolve.outputs.version }}
+          PACKAGE_JSON: ${{ needs.resolve.outputs.package_dir }}/package.json
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+
+          const manifest = JSON.parse(fs.readFileSync(`../${process.env.PACKAGE_JSON}`, 'utf8'));
+          if (manifest.version !== process.env.EXPECTED) {
+            throw new Error(`Package version ${manifest.version} does not match tag ${process.env.EXPECTED}`);
+          }
+          NODE
+      - name: Install, test and build workspace
+        working-directory: frontend
+        run: |
+          npm ci
+          npm test
+      - name: Inspect target package tarball
+        working-directory: frontend
+        env:
+          PACKAGE_NAME: ${{ needs.resolve.outputs.package_name }}
+        run: npm pack --dry-run --workspace "$PACKAGE_NAME"
+
+  publish:
+    name: Publish ${{ needs.resolve.outputs.package_name }}
+    needs: [resolve, verify]
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Install and build
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+      - name: Publish target package
+        working-directory: frontend
+        env:
+          PACKAGE_NAME: ${{ needs.resolve.outputs.package_name }}
+        run: npm publish --workspace "$PACKAGE_NAME" --access public --provenance
+
+  github-release:
+    name: Create npm GitHub release
+    needs: [resolve, publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+      - name: Create release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACKAGE_NAME: ${{ needs.resolve.outputs.package_name }}
+          VERSION: ${{ needs.resolve.outputs.version }}
+        run: |
+          package_url="https://www.npmjs.com/package/${PACKAGE_NAME}/v/${VERSION}"
+          gh release create "$GITHUB_REF_NAME" \
+            --verify-tag \
+            --title "${PACKAGE_NAME} v${VERSION}" \
+            --notes "npm: ${package_url}" \
+            --generate-notes

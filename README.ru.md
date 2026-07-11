@@ -135,9 +135,10 @@ npm run pack:dry-run
 
 ## Релиз
 
-Теги `auth-v*` публикуют Python-пакет в PyPI и четыре npm-пакета в порядке зависимостей.
-Workflow проверяет совпадение всех версий с тегом, запускает tests/build/package checks и
-использует Trusted Publishing/provenance.
+Пакеты выпускаются независимо. Тег `python-v*` публикует только `orcestr-auth`, а теги
+`auth-core-v*`, `auth-react-v*`, `auth-forms-v*` и `auth-next-v*` публикуют только соответствующий
+npm-пакет. Workflows проверяют выбранную версию, запускают относящиеся к ней проверки и используют
+Trusted Publishing/provenance.
 
 Полная инструкция: [docs/RELEASE.ru.md](./docs/RELEASE.ru.md).
 
