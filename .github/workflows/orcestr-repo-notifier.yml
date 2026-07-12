@@ -28,8 +28,8 @@ jobs:
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           telegram-bot-token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          telegram-chat-id: ${{ secrets.TELEGRAM_CHAT_ID }}
-          telegram-message-thread-id: ${{ secrets.TELEGRAM_MESSAGE_THREAD_ID }}
+          telegram-chat-id: '@orcestrdev'
+          telegram-message-thread-id: '2'
           telegram-parse-mode: HTML
           custom-task: ${{ github.event.inputs.task }}
           mode: product
