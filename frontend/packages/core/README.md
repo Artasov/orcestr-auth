@@ -30,6 +30,11 @@ npm install @orcestr/auth-core
 import { AuthClient, safeRedirectPath } from '@orcestr/auth-core';
 
 export const auth = new AuthClient({
+    logging: {
+        enabled: process.env.NODE_ENV !== 'production',
+        label: 'AUTH',
+        logRequestsDelay: true,
+    },
     routes: {
         methods: '/api/v1/auth/methods/',
         login: '/api/v1/auth/login/',
@@ -47,6 +52,9 @@ export const auth = new AuthClient({
 
 const next = safeRedirectPath(searchParams.get('next'), '/overview');
 ```
+
+`logging` accepts `true`, `false`, or `cutie-logs` options. Sensitive fields such as
+passwords and tokens are redacted automatically.
 
 Applications own navigation and product-specific fallback targets.
 

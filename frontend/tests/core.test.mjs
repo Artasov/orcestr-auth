@@ -2,11 +2,26 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  AuthApiError,
   AuthClient,
   authPathWithNext,
   isOAuthProvider,
   safeRedirectPath,
 } from "../packages/core/dist/index.js";
+
+const routes = {
+  login: "/login",
+  register: "/register",
+  methods: "/methods",
+  me: "/me",
+  refresh: "/refresh",
+  logout: "/logout",
+  passwordResetRequest: "/reset/request",
+  passwordResetConfirm: "/reset/confirm",
+  emailVerificationCode: "/verify/send",
+  emailConfirm: "/verify/confirm",
+  oauthCallback: (provider) => `/oauth/${provider}`,
+};
 
 test("safe redirect accepts internal targets and rejects external redirects", () => {
   assert.equal(
@@ -43,19 +58,7 @@ test("authenticated requests refresh once and retry after an expired access cook
     new Response(JSON.stringify({ id: 1, username: "user" }), { status: 200 }),
   ];
   const client = new AuthClient({
-    routes: {
-      login: "/login",
-      register: "/register",
-      methods: "/methods",
-      me: "/me",
-      refresh: "/refresh",
-      logout: "/logout",
-      passwordResetRequest: "/reset/request",
-      passwordResetConfirm: "/reset/confirm",
-      emailVerificationCode: "/verify/send",
-      emailConfirm: "/verify/confirm",
-      oauthCallback: (provider) => `/oauth/${provider}`,
-    },
+    routes,
     fetch: async (url, init) => {
       calls.push([url, init?.method]);
       return responses.shift();
@@ -67,4 +70,49 @@ test("authenticated requests refresh once and retry after an expired access cook
     ["/refresh", "POST"],
     ["/me", "GET"],
   ]);
+});
+
+test("structured API errors preserve their code and human-readable message", async () => {
+  const client = new AuthClient({
+    routes,
+    fetch: async () =>
+      new Response(
+        JSON.stringify({
+          error: { code: "authentication_required", message: "Authentication required" },
+        }),
+        { status: 401 },
+      ),
+  });
+
+  await assert.rejects(client.login("user", "secret"), (error) => {
+    assert.equal(error instanceof AuthApiError, true);
+    assert.equal(error.code, "authentication_required");
+    assert.equal(error.message, "Authentication required");
+    return true;
+  });
+});
+
+test("auth request logging redacts sensitive payload fields", async () => {
+  const entries = [];
+  const output = {
+    log: (...args) => entries.push(args),
+    error: () => {},
+    warn: () => {},
+    groupCollapsed: () => {},
+    groupEnd: () => {},
+  };
+  const client = new AuthClient({
+    routes,
+    logging: { console: output, logRequestsTime: false },
+    fetch: async () =>
+      new Response(JSON.stringify({ user: { id: 1, username: "user" } }), {
+        status: 200,
+      }),
+  });
+
+  await client.login("user", "secret");
+  assert.deepEqual(
+    entries.find((entry) => entry[0] === "%cRequest data:")[2],
+    { username: "user", password: "[redacted]" },
+  );
 });

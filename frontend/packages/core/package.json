@@ -40,5 +40,8 @@
   },
   "scripts": {
     "build": "tsc -b"
+  },
+  "dependencies": {
+    "cutie-logs": "0.1.5"
   }
 }
