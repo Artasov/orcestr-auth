@@ -1,6 +1,6 @@
 {
   "name": "@orcestr/auth-core",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Framework-independent Orcestr authentication client and redirect helpers.",
   "author": "Artasov",
   "license": "MPL-2.0",
