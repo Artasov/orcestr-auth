@@ -1,6 +1,6 @@
 {
   "name": "@orcestr/auth-next",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Next.js proxy and server redirect helpers for Orcestr authentication.",
   "author": "Artasov",
   "license": "MIT",
