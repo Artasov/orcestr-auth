@@ -38,7 +38,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@orcestr/auth-core": "0.2.0"
+    "@orcestr/auth-core": "0.2.1"
   },
   "peerDependencies": {
     "@tanstack/react-query": "^5.99.0",
