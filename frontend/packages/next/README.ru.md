@@ -5,7 +5,7 @@
 # @orcestr/auth-next
 
 [![npm](https://img.shields.io/npm/v/@orcestr/auth-next)](https://www.npmjs.com/package/@orcestr/auth-next)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Artasov/orcestr-auth/blob/main/LICENSE)
+[![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](https://github.com/Artasov/orcestr-auth/blob/main/LICENSE)
 
 Тонкие Next.js proxy и server redirect helpers для `@orcestr/auth-core`. Пакет не содержит
 страниц или product route registry.

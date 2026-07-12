@@ -5,7 +5,7 @@
 # @orcestr/auth-forms
 
 [![npm](https://img.shields.io/npm/v/@orcestr/auth-forms)](https://www.npmjs.com/package/@orcestr/auth-forms)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Artasov/orcestr-auth/blob/main/LICENSE)
+[![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](https://github.com/Artasov/orcestr-auth/blob/main/LICENSE)
 
 Ready authentication forms built with [`@orcestr/ui`](https://github.com/Artasov/orcestr-ui).
 The package exports forms, not pages, routes, metadata or product branding.

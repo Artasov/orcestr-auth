@@ -12,7 +12,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/orcestr-auth)](https://pypi.org/project/orcestr-auth/)
 [![npm](https://img.shields.io/npm/v/@orcestr/auth-core)](https://www.npmjs.com/package/@orcestr/auth-core)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](./LICENSE)
 
 Reusable authentication foundation for the [Orcestr](https://orcestr.com) ecosystem.
 
@@ -152,4 +152,7 @@ Public updates are maintained by [@Artasov](https://github.com/Artasov).
 
 ## License
 
-MIT. See [LICENSE](./LICENSE).
+Licensed under the [Mozilla Public License 2.0](./LICENSE). Commercial use is permitted; changes
+to MPL-covered files remain subject to the MPL. Attribution and copyright notices are documented
+in [NOTICE](./NOTICE). The Orcestr name and branding are governed separately by
+[TRADEMARKS.md](./TRADEMARKS.md).

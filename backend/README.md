@@ -12,7 +12,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/orcestr-auth)](https://pypi.org/project/orcestr-auth/)
 [![Python](https://img.shields.io/pypi/pyversions/orcestr-auth)](https://pypi.org/project/orcestr-auth/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../LICENSE)
+[![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](../LICENSE)
 
 Python authentication core and FastAPI/SQLAlchemy adapters for the
 [Orcestr](https://orcestr.com) ecosystem.
@@ -126,4 +126,7 @@ uv build
 
 ## License
 
-MIT. See the [repository license](https://github.com/Artasov/orcestr-auth/blob/main/LICENSE).
+Licensed under the [Mozilla Public License 2.0](https://github.com/Artasov/orcestr-auth/blob/main/LICENSE).
+Commercial use is permitted; see the repository
+[NOTICE](https://github.com/Artasov/orcestr-auth/blob/main/NOTICE) and
+[trademark policy](https://github.com/Artasov/orcestr-auth/blob/main/TRADEMARKS.md).

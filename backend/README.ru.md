@@ -12,7 +12,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/orcestr-auth)](https://pypi.org/project/orcestr-auth/)
 [![Python](https://img.shields.io/pypi/pyversions/orcestr-auth)](https://pypi.org/project/orcestr-auth/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../LICENSE)
+[![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](../LICENSE)
 
 Python core авторизации и адаптеры FastAPI/SQLAlchemy для экосистемы
 [Orcestr](https://orcestr.com).
@@ -126,4 +126,7 @@ uv build
 
 ## Лицензия
 
-MIT. См. [лицензию репозитория](https://github.com/Artasov/orcestr-auth/blob/main/LICENSE).
+Проект распространяется по [Mozilla Public License 2.0](https://github.com/Artasov/orcestr-auth/blob/main/LICENSE).
+Коммерческое использование разрешено; см.
+[NOTICE](https://github.com/Artasov/orcestr-auth/blob/main/NOTICE) и
+[политику использования бренда](https://github.com/Artasov/orcestr-auth/blob/main/TRADEMARKS.md).

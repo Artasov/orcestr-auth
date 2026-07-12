@@ -1,9 +1,9 @@
 {
   "name": "@orcestr/auth-core",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Framework-independent Orcestr authentication client and redirect helpers.",
   "author": "Artasov",
-  "license": "MIT",
+  "license": "MPL-2.0",
   "keywords": [
     "authentication",
     "oauth",
@@ -24,8 +24,10 @@
   "files": [
     "dist",
     "LICENSE",
+    "NOTICE",
     "README.md",
-    "README.ru.md"
+    "README.ru.md",
+    "TRADEMARKS.md"
   ],
   "exports": {
     ".": {

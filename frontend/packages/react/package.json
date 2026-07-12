@@ -1,9 +1,9 @@
 {
   "name": "@orcestr/auth-react",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "React Query provider and hooks for Orcestr authentication.",
   "author": "Artasov",
-  "license": "MIT",
+  "license": "MPL-2.0",
   "keywords": [
     "authentication",
     "orcestr",
@@ -23,8 +23,10 @@
   "files": [
     "dist",
     "LICENSE",
+    "NOTICE",
     "README.md",
-    "README.ru.md"
+    "README.ru.md",
+    "TRADEMARKS.md"
   ],
   "exports": {
     ".": {
@@ -36,7 +38,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@orcestr/auth-core": "0.1.0"
+    "@orcestr/auth-core": "0.2.0"
   },
   "peerDependencies": {
     "@tanstack/react-query": "^5.99.0",

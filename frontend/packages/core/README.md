@@ -5,7 +5,7 @@
 # @orcestr/auth-core
 
 [![npm](https://img.shields.io/npm/v/@orcestr/auth-core)](https://www.npmjs.com/package/@orcestr/auth-core)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Artasov/orcestr-auth/blob/main/LICENSE)
+[![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](https://github.com/Artasov/orcestr-auth/blob/main/LICENSE)
 
 Framework-independent browser authentication client for the Orcestr ecosystem. It has no
 React, UI-kit or Next.js dependency.

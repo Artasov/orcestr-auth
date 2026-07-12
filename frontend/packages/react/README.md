@@ -5,7 +5,7 @@
 # @orcestr/auth-react
 
 [![npm](https://img.shields.io/npm/v/@orcestr/auth-react)](https://www.npmjs.com/package/@orcestr/auth-react)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Artasov/orcestr-auth/blob/main/LICENSE)
+[![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](https://github.com/Artasov/orcestr-auth/blob/main/LICENSE)
 
 Headless React Query bindings for `@orcestr/auth-core`. The package does not depend on a UI
 kit or routing framework.

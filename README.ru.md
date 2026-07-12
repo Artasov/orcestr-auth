@@ -12,7 +12,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/orcestr-auth)](https://pypi.org/project/orcestr-auth/)
 [![npm](https://img.shields.io/npm/v/@orcestr/auth-core)](https://www.npmjs.com/package/@orcestr/auth-core)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](./LICENSE)
 
 Переиспользуемая основа авторизации для экосистемы [Orcestr](https://orcestr.com).
 
@@ -153,4 +153,7 @@ Trusted Publishing/provenance.
 
 ## Лицензия
 
-MIT. См. [LICENSE](./LICENSE).
+Проект распространяется по [Mozilla Public License 2.0](./LICENSE). Коммерческое использование
+разрешено; изменения файлов под MPL остаются на условиях MPL. Авторство и copyright-уведомления
+указаны в [NOTICE](./NOTICE). Название и брендинг Orcestr регулируются отдельно в
+[TRADEMARKS.md](./TRADEMARKS.md).
