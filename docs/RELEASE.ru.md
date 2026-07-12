@@ -5,6 +5,10 @@
 Каждый пакет имеет независимую версию и отдельный релизный тег. Обновление одного пакета не
 переиздаёт остальные пакеты.
 
+Корневой helper `scripts/release.mjs` и общие конфигурации PyCharm в `.run` автоматизируют
+изменение версии, обновление lock-файла, релизный commit и отдельный тег пакета. По умолчанию они
+создают commit и тег только локально; для публикации всё равно требуется явный push.
+
 | Пакет | Тег | Workflow |
 | --- | --- | --- |
 | `orcestr-auth` | `python-vX.Y.Z` | `.github/workflows/release.yml` |
@@ -45,12 +49,13 @@ uv run pytest -q
 uv build --no-sources
 ```
 
-4. Закоммитьте релизное состояние и отправьте совпадающий тег:
+4. Из корня репозитория создайте релизный commit и тег helper-командой (либо запустите
+   соответствующую конфигурацию PyCharm `release Python patch/minor/major`):
 
 ```powershell
-git tag -a python-v0.1.0 -m "orcestr-auth 0.1.0"
+node scripts/release.mjs python patch
 git push origin main
-git push origin python-v0.1.0
+git push origin python-v0.1.1
 ```
 
 Python workflow проверяет только версию backend, публикует пакет через PyPI OIDC и создаёт
@@ -71,13 +76,18 @@ npm test
 npm run pack:dry-run
 ```
 
-5. Закоммитьте изменения и отправьте тег нужного пакета. Например, релиз React-пакета:
+5. Из корня репозитория создайте релизный commit и тег helper-командой (либо используйте
+   соответствующую конфигурацию PyCharm). Например, patch-релиз React-пакета:
 
 ```powershell
-git tag -a auth-react-v0.1.1 -m "@orcestr/auth-react 0.1.1"
+node scripts/release.mjs react patch
 git push origin main
 git push origin auth-react-v0.1.1
 ```
+
+Доступные цели: `python`, `core`, `react`, `forms` и `next`; типы релиза: `patch`, `minor` и
+`major`. Флаг `--dry-run` показывает результат без изменений, а `--push` сразу отправляет созданный
+релиз. Команда без `--dry-run` намеренно отказывается работать при грязном Git worktree.
 
 npm workflow определяет по тегу ровно один пакет, проверяет его версию, тестирует workspace,
 публикует только выбранный пакет с provenance и создаёт отдельный GitHub Release.

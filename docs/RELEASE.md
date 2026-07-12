@@ -5,6 +5,10 @@
 Every package has an independent version and release tag. Updating one package never republishes
 the other packages.
 
+The root `scripts/release.mjs` helper and the shared PyCharm configurations in `.run` automate
+version bumps, lock-file updates, release commits and package-specific tags. They create the
+commit and tag locally by default; publishing still requires an explicit push.
+
 | Package | Tag | Workflow |
 | --- | --- | --- |
 | `orcestr-auth` | `python-vX.Y.Z` | `.github/workflows/release.yml` |
@@ -45,12 +49,13 @@ uv run pytest -q
 uv build --no-sources
 ```
 
-4. Commit the release state and push a matching tag:
+4. From the repository root, create the release commit and tag with the helper (or run the
+   matching `release Python patch/minor/major` PyCharm configuration):
 
 ```powershell
-git tag -a python-v0.1.0 -m "orcestr-auth 0.1.0"
+node scripts/release.mjs python patch
 git push origin main
-git push origin python-v0.1.0
+git push origin python-v0.1.1
 ```
 
 The Python workflow verifies only the backend version, publishes through PyPI OIDC and creates a
@@ -71,13 +76,18 @@ npm test
 npm run pack:dry-run
 ```
 
-5. Commit and push the tag belonging to that package. For example, a React package release is:
+5. From the repository root, create the release commit and tag with the helper (or use the
+   matching PyCharm configuration). For example, a React patch release is:
 
 ```powershell
-git tag -a auth-react-v0.1.1 -m "@orcestr/auth-react 0.1.1"
+node scripts/release.mjs react patch
 git push origin main
 git push origin auth-react-v0.1.1
 ```
+
+Available targets are `python`, `core`, `react`, `forms` and `next`; release parts are `patch`,
+`minor` and `major`. Add `--dry-run` to preview or `--push` to create and immediately push the
+release. The non-dry-run command intentionally refuses to work with a dirty Git worktree.
 
 The npm workflow resolves exactly one package from the tag, checks that package's version, tests
 the workspace, publishes only the selected workspace with provenance, and creates a
