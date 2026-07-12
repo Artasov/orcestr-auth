@@ -1,6 +1,6 @@
 {
   "name": "@orcestr/auth-forms",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Ready authentication forms built with @orcestr/ui, without pages or routing ownership.",
   "author": "Artasov",
   "license": "MIT",
