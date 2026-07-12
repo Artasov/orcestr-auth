@@ -1,6 +1,6 @@
 {
   "name": "@orcestr/auth-react",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "React Query provider and hooks for Orcestr authentication.",
   "author": "Artasov",
   "license": "MPL-2.0",
