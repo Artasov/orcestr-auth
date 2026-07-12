@@ -1,5 +1,5 @@
 name: Publish npm package
-run-name: Publish npm package - ${{ github.ref_name }}
+run-name: Publish npm package - ${{ inputs.package && format('auth-{0}-v{1}', inputs.package, inputs.version) || github.ref_name }}
 
 on:
   push:
@@ -8,9 +8,21 @@ on:
       - 'auth-react-v*'
       - 'auth-forms-v*'
       - 'auth-next-v*'
-
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  workflow_dispatch:
+    inputs:
+      package:
+        description: npm package to publish
+        required: true
+        type: choice
+        options:
+          - core
+          - react
+          - forms
+          - next
+      version:
+        description: Existing package tag version to publish
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -22,46 +34,57 @@ jobs:
     outputs:
       package_dir: ${{ steps.release.outputs.package_dir }}
       package_name: ${{ steps.release.outputs.package_name }}
+      tag: ${{ steps.release.outputs.tag }}
       version: ${{ steps.release.outputs.version }}
     steps:
       - id: release
         name: Resolve package and version from tag
         shell: bash
+        env:
+          DISPATCH_PACKAGE: ${{ inputs.package }}
+          DISPATCH_VERSION: ${{ inputs.version }}
         run: |
-          case "$GITHUB_REF_NAME" in
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            release_ref="auth-${DISPATCH_PACKAGE}-v${DISPATCH_VERSION}"
+          else
+            release_ref="$GITHUB_REF_NAME"
+          fi
+
+          case "$release_ref" in
             auth-core-v*)
               package_dir="frontend/packages/core"
               package_name="@orcestr/auth-core"
-              version="${GITHUB_REF_NAME#auth-core-v}"
+              version="${release_ref#auth-core-v}"
               ;;
             auth-react-v*)
               package_dir="frontend/packages/react"
               package_name="@orcestr/auth-react"
-              version="${GITHUB_REF_NAME#auth-react-v}"
+              version="${release_ref#auth-react-v}"
               ;;
             auth-forms-v*)
               package_dir="frontend/packages/forms"
               package_name="@orcestr/auth-forms"
-              version="${GITHUB_REF_NAME#auth-forms-v}"
+              version="${release_ref#auth-forms-v}"
               ;;
             auth-next-v*)
               package_dir="frontend/packages/next"
               package_name="@orcestr/auth-next"
-              version="${GITHUB_REF_NAME#auth-next-v}"
+              version="${release_ref#auth-next-v}"
               ;;
             *)
-              echo "Unsupported release tag: $GITHUB_REF_NAME" >&2
+              echo "Unsupported release tag: $release_ref" >&2
               exit 1
               ;;
           esac
 
-          if [[ -z "$version" ]]; then
-            echo "Release version is empty" >&2
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Unsupported release version: $version" >&2
             exit 1
           fi
 
           echo "package_dir=$package_dir" >> "$GITHUB_OUTPUT"
           echo "package_name=$package_name" >> "$GITHUB_OUTPUT"
+          echo "tag=$release_ref" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
   verify:
@@ -70,6 +93,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.resolve.outputs.tag }}
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
@@ -111,6 +136,8 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.resolve.outputs.tag }}
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
@@ -139,10 +166,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           PACKAGE_NAME: ${{ needs.resolve.outputs.package_name }}
+          TAG: ${{ needs.resolve.outputs.tag }}
           VERSION: ${{ needs.resolve.outputs.version }}
         run: |
           package_url="https://www.npmjs.com/package/${PACKAGE_NAME}/v/${VERSION}"
-          gh release create "$GITHUB_REF_NAME" \
+          gh release create "$TAG" \
             --verify-tag \
             --title "${PACKAGE_NAME} v${VERSION}" \
             --notes "npm: ${package_url}" \

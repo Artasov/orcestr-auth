@@ -61,6 +61,10 @@ git push origin python-v0.1.1
 The Python workflow verifies only the backend version, publishes through PyPI OIDC and creates a
 package-specific GitHub Release.
 
+If the tag already exists but its push event was missed, open **Actions → Publish Python package
+→ Run workflow** and enter the version without the prefix, for example `0.1.1`. The workflow
+checks out the existing `python-v0.1.1` tag before publishing.
+
 ## npm Package Release
 
 1. Update the `version` of only the package being released.
@@ -89,9 +93,17 @@ Available targets are `python`, `core`, `react`, `forms` and `next`; release par
 `minor` and `major`. Add `--dry-run` to preview or `--push` to create and immediately push the
 release. The non-dry-run command intentionally refuses to work with a dirty Git worktree.
 
+Push release tags one at a time. Do not use `git push --tags` for a batch of releases: GitHub does
+not create tag push events when more than three tags are pushed together. The helper's `--push`
+mode always pushes only its own tag.
+
 The npm workflow resolves exactly one package from the tag, checks that package's version, tests
 the workspace, publishes only the selected workspace with provenance, and creates a
 package-specific GitHub Release.
+
+If a tag already exists but its push event was missed, open **Actions → Publish npm package → Run
+workflow**, choose the package and enter the version without the tag prefix. The workflow checks
+out that existing package tag before publishing.
 
 Internal dependencies remain exact by design. A new core version does not force releases of
 React, forms or Next.js unless they need to consume that core version.

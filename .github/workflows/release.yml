@@ -1,13 +1,16 @@
 name: Publish Python package
-run-name: Publish orcestr-auth - ${{ github.ref_name }}
+run-name: Publish orcestr-auth - ${{ inputs.version && format('python-v{0}', inputs.version) || github.ref_name }}
 
 on:
   push:
     tags:
       - 'python-v*'
-
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Existing python-vX.Y.Z tag version to publish
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -17,14 +20,32 @@ jobs:
     name: Verify Python release
     runs-on: ubuntu-latest
     outputs:
+      tag: ${{ steps.release.outputs.tag }}
       version: ${{ steps.release.outputs.version }}
     steps:
-      - uses: actions/checkout@v6
       - id: release
         name: Resolve release version
         shell: bash
-        run: echo "version=${GITHUB_REF_NAME#python-v}" >> "$GITHUB_OUTPUT"
-      - uses: astral-sh/setup-uv@v6
+        env:
+          DISPATCH_VERSION: ${{ inputs.version }}
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            version="$DISPATCH_VERSION"
+          else
+            version="${GITHUB_REF_NAME#python-v}"
+          fi
+
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Unsupported release version: $version" >&2
+            exit 1
+          fi
+
+          echo "tag=python-v${version}" >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.release.outputs.tag }}
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
       - name: Check package version against tag
         shell: bash
         env:
@@ -58,7 +79,9 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v6
+        with:
+          ref: ${{ needs.verify.outputs.tag }}
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
       - name: Build
         working-directory: backend
         run: uv build --no-sources
@@ -78,9 +101,10 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.verify.outputs.tag }}
           VERSION: ${{ needs.verify.outputs.version }}
         run: |
-          gh release create "$GITHUB_REF_NAME" \
+          gh release create "$TAG" \
             --verify-tag \
             --title "orcestr-auth v${VERSION}" \
             --notes "PyPI: https://pypi.org/project/orcestr-auth/${VERSION}/" \
