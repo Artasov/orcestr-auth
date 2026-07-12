@@ -24,8 +24,8 @@ keep ownership of users, pages, branding, legal acceptance, tenants and permissi
 
 | Item | Value |
 | --- | --- |
-| Version | `0.1.0` |
-| Status | Dev / Beta |
+| Version | `0.2.0` |
+| Status | Beta |
 | Backend | Python 3.12+, FastAPI, SQLAlchemy 2 |
 | Frontend | React 19, React Query 5, Next.js 16 |
 | OAuth | GitHub, Google and Yandex, independently optional |
@@ -128,6 +128,10 @@ npm ci
 npm test
 npm run pack:dry-run
 ```
+
+The shared [`.run`](./.run) configurations expose dependency installation and builds for Python,
+Core, React, Forms and Next.js separately, plus `install all` and `build all` for the complete
+workspace. Release configurations remain package-specific.
 
 The sibling Orcestr checkout is the reference consumer. Its local installers use source
 packages without writing `file:` or editable paths into production manifests and lock files.
