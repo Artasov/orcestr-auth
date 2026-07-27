@@ -128,6 +128,18 @@ export const authMessages: Record<AuthLocale, AuthMessages> = {
       oauth_account_link_required:
         "An account with this email already exists. Use its existing sign-in method; automatic linking is disabled.",
       oauth_code_exchange_failed: "The OAuth code could not be accepted.",
+      oauth_provider_unavailable:
+        "The sign-in provider is temporarily unavailable. Try again in a few minutes.",
+      oauth_provider_timeout:
+        "The sign-in provider did not respond in time. Try again.",
+      oauth_userinfo_failed:
+        "The sign-in provider did not return the account profile. Try again.",
+      oauth_access_token_missing:
+        "The sign-in provider did not return an access token. Start sign-in again.",
+      oauth_redirect_not_allowed:
+        "The sign-in callback address is not allowed.",
+      oauth_email_missing:
+        "The sign-in provider did not return a usable email address.",
       csrf_header_missing: "The request security check failed.",
     },
   },
@@ -197,6 +209,18 @@ export const authMessages: Record<AuthLocale, AuthMessages> = {
       oauth_account_link_required:
         "Аккаунт с таким email уже существует. Используйте прежний способ входа; автоматическая привязка отключена.",
       oauth_code_exchange_failed: "Не удалось принять OAuth-код.",
+      oauth_provider_unavailable:
+        "Сервис входа временно недоступен. Повторите попытку через несколько минут.",
+      oauth_provider_timeout:
+        "Сервис входа не ответил вовремя. Повторите попытку.",
+      oauth_userinfo_failed:
+        "Сервис входа не вернул данные аккаунта. Повторите попытку.",
+      oauth_access_token_missing:
+        "Сервис входа не вернул токен доступа. Начните вход заново.",
+      oauth_redirect_not_allowed:
+        "Адрес возврата после входа не разрешён.",
+      oauth_email_missing:
+        "Сервис входа не вернул подходящий email.",
       csrf_header_missing: "Не пройдена проверка безопасности запроса.",
     },
   },
