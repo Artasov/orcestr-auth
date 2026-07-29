@@ -72,7 +72,7 @@ class OAuthProviderClient:
             for value in config.redirect_origins
         }
         if str(origin) not in allowed:
-            raise OAuthProviderError("oauth_redirect_not_allowed")
+            raise OAuthProviderError("oauth_redirect_uri_not_allowed")
 
     async def _google(
         self,

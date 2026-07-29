@@ -1,6 +1,6 @@
 {
   "name": "@orcestr/auth-next",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Next.js proxy and server redirect helpers for Orcestr authentication.",
   "author": "Artasov",
   "license": "MPL-2.0",
@@ -38,7 +38,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@orcestr/auth-core": "0.2.1"
+    "@orcestr/auth-core": "0.3.0",
+    "@orcestr/core-next": "0.1.0"
   },
   "peerDependencies": {
     "next": "^16.0.0"

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi import Response
 
-from .config import AuthConfig
+from ..config import AuthConfig
 
 
 def set_auth_cookies(
@@ -52,4 +52,3 @@ def clear_auth_cookies(response: Response, config: AuthConfig) -> None:
         httponly=True,
         samesite=cookie.same_site,
     )
-

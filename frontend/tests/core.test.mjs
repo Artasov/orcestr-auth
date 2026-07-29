@@ -2,12 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  AuthApiError,
   AuthClient,
+  AuthSessionManager,
   authPathWithNext,
   isOAuthProvider,
   safeRedirectPath,
 } from "../packages/core/dist/index.js";
+import { ApiError } from "@orcestr/core";
 
 const routes = {
   login: "/login",
@@ -30,6 +31,8 @@ test("safe redirect accepts internal targets and rejects external redirects", ()
   );
   assert.equal(safeRedirectPath("https://evil.test", "/overview"), "/overview");
   assert.equal(safeRedirectPath("//evil.test", "/overview"), "/overview");
+  assert.equal(safeRedirectPath("/%5cevil.test", "/overview"), "/overview");
+  assert.equal(safeRedirectPath("/%2f%2fevil.test", "/overview"), "/overview");
   assert.equal(
     safeRedirectPath("/login?next=/admin", "/overview"),
     "/overview",
@@ -72,6 +75,86 @@ test("authenticated requests refresh once and retry after an expired access cook
   ]);
 });
 
+test("parallel unauthorized requests share one in-flight refresh", async () => {
+  let refreshCalls = 0;
+  let authenticated = false;
+  const session = new AuthSessionManager({
+    execute: async () =>
+      authenticated
+        ? new Response(null, { status: 204 })
+        : new Response(null, { status: 401 }),
+    refresh: async () => {
+      refreshCalls += 1;
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      authenticated = true;
+      return new Response(null, { status: 204 });
+    },
+  });
+
+  const results = await Promise.all([
+    session.request("/first"),
+    session.request("/second"),
+  ]);
+  assert.equal(refreshCalls, 1);
+  assert.deepEqual(
+    results.map(({ response }) => response.status),
+    [204, 204],
+  );
+});
+
+test("public login errors and forbidden responses never trigger refresh", async () => {
+  let refreshCalls = 0;
+  const session = new AuthSessionManager({
+    execute: async () => new Response(null, { status: 403 }),
+    refresh: async () => {
+      refreshCalls += 1;
+      return new Response(null, { status: 204 });
+    },
+  });
+  const forbidden = await session.request("/forbidden");
+  assert.equal(forbidden.response.status, 403);
+  assert.equal(refreshCalls, 0);
+
+  const calls = [];
+  const client = new AuthClient({
+    routes,
+    fetch: async (url) => {
+      calls.push(url);
+      return new Response(
+        JSON.stringify({
+          error: {
+            code: "invalid_credentials",
+            message: "Invalid username or password.",
+          },
+        }),
+        { status: 401 },
+      );
+    },
+  });
+  await assert.rejects(client.login("user", "wrong"));
+  assert.deepEqual(calls, ["/login"]);
+});
+
+test("failed refresh is reported without retrying the protected request", async () => {
+  let requestCalls = 0;
+  let refreshCalls = 0;
+  const session = new AuthSessionManager({
+    execute: async () => {
+      requestCalls += 1;
+      return new Response(null, { status: 401 });
+    },
+    refresh: async () => {
+      refreshCalls += 1;
+      return new Response(null, { status: 401 });
+    },
+  });
+  const result = await session.request("/protected");
+  assert.equal(result.response.status, 401);
+  assert.equal(result.refreshFailed, true);
+  assert.equal(requestCalls, 1);
+  assert.equal(refreshCalls, 1);
+});
+
 test("structured API errors preserve their code and human-readable message", async () => {
   const client = new AuthClient({
     routes,
@@ -85,7 +168,7 @@ test("structured API errors preserve their code and human-readable message", asy
   });
 
   await assert.rejects(client.login("user", "secret"), (error) => {
-    assert.equal(error instanceof AuthApiError, true);
+    assert.equal(error instanceof ApiError, true);
     assert.equal(error.code, "authentication_required");
     assert.equal(error.message, "Authentication required");
     return true;

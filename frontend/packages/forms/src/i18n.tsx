@@ -1,6 +1,10 @@
 "use client";
 
-import { AuthApiError } from "@orcestr/auth-core";
+import {
+  isAuthErrorCode,
+  type AuthErrorCode,
+} from "@orcestr/auth-core";
+import { isApiError } from "@orcestr/core";
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 
 export type AuthLocale = "en" | "ru";
@@ -54,7 +58,7 @@ export type AuthMessages = {
     signInWith: string;
     providers: Record<"github" | "google" | "yandex", string>;
   };
-  errors: Record<string, string>;
+  errors: Record<AuthErrorCode, string>;
 };
 
 export type AuthMessageOverrides = {
@@ -117,14 +121,36 @@ export const authMessages: Record<AuthLocale, AuthMessages> = {
     },
     errors: {
       invalid_credentials: "Invalid email, username or password.",
-      "Invalid username or password.": "Invalid email, username or password.",
+      not_authenticated: "Sign in to continue.",
+      session_expired: "Your session has expired. Sign in again.",
+      session_invalid: "Your session is invalid. Sign in again.",
       user_inactive: "This account is inactive.",
       auth_rate_limited: "Too many attempts. Try again later.",
+      email_taken: "An account with this email already exists.",
+      username_taken: "This username is already taken.",
+      username_invalid: "Enter a valid username.",
+      email_missing: "Add an email address to continue.",
+      email_domain_not_allowed: "This email domain is not allowed.",
+      country_not_supported: "Sign-in is not available in your location.",
+      refresh_token_missing: "Your session has ended. Sign in again.",
+      refresh_token_invalid: "Your session is invalid. Sign in again.",
+      refresh_token_reused: "Your session was revoked. Sign in again.",
+      refresh_token_expired: "Your session has expired. Sign in again.",
+      password_reset_rate_limited:
+        "Too many password reset requests. Try again later.",
       password_reset_code_invalid: "The reset code is invalid or expired.",
       password_reset_attempts_exceeded: "Too many invalid code attempts.",
+      verification_resend_too_soon:
+        "Wait before requesting another confirmation code.",
       verification_code_invalid: "The confirmation code is invalid or expired.",
       verification_attempts_exceeded: "Too many invalid code attempts.",
+      current_password_invalid: "The current password is incorrect.",
+      new_password_matches_current:
+        "The new password must be different from the current password.",
+      oauth_provider_not_supported: "This sign-in provider is not supported.",
       oauth_provider_not_enabled: "This sign-in provider is not enabled.",
+      oauth_provider_not_allowed:
+        "This sign-in provider is not available in your location.",
       oauth_account_link_required:
         "An account with this email already exists. Use its existing sign-in method; automatic linking is disabled.",
       oauth_code_exchange_failed: "The OAuth code could not be accepted.",
@@ -136,7 +162,8 @@ export const authMessages: Record<AuthLocale, AuthMessages> = {
         "The sign-in provider did not return the account profile. Try again.",
       oauth_access_token_missing:
         "The sign-in provider did not return an access token. Start sign-in again.",
-      oauth_redirect_not_allowed:
+      oauth_origin_not_allowed: "The sign-in origin is not allowed.",
+      oauth_redirect_uri_not_allowed:
         "The sign-in callback address is not allowed.",
       oauth_email_missing:
         "The sign-in provider did not return a usable email address.",
@@ -198,14 +225,36 @@ export const authMessages: Record<AuthLocale, AuthMessages> = {
     },
     errors: {
       invalid_credentials: "Неверный email, логин или пароль.",
-      "Invalid username or password.": "Неверный email, логин или пароль.",
+      not_authenticated: "Войдите, чтобы продолжить.",
+      session_expired: "Сессия истекла. Войдите снова.",
+      session_invalid: "Сессия недействительна. Войдите снова.",
       user_inactive: "Этот аккаунт отключён.",
       auth_rate_limited: "Слишком много попыток. Повторите позже.",
+      email_taken: "Аккаунт с таким email уже существует.",
+      username_taken: "Этот логин уже занят.",
+      username_invalid: "Введите корректный логин.",
+      email_missing: "Добавьте email, чтобы продолжить.",
+      email_domain_not_allowed: "Этот домен email не разрешён.",
+      country_not_supported: "Вход недоступен в вашем регионе.",
+      refresh_token_missing: "Сессия завершена. Войдите снова.",
+      refresh_token_invalid: "Сессия недействительна. Войдите снова.",
+      refresh_token_reused: "Сессия отозвана. Войдите снова.",
+      refresh_token_expired: "Сессия истекла. Войдите снова.",
+      password_reset_rate_limited:
+        "Слишком много запросов восстановления. Повторите позже.",
       password_reset_code_invalid: "Код восстановления неверен или истёк.",
       password_reset_attempts_exceeded: "Слишком много неверных попыток.",
+      verification_resend_too_soon:
+        "Подождите перед повторной отправкой кода.",
       verification_code_invalid: "Код подтверждения неверен или истёк.",
       verification_attempts_exceeded: "Слишком много неверных попыток.",
+      current_password_invalid: "Текущий пароль введён неверно.",
+      new_password_matches_current:
+        "Новый пароль должен отличаться от текущего.",
+      oauth_provider_not_supported: "Этот способ входа не поддерживается.",
       oauth_provider_not_enabled: "Этот способ входа не включён.",
+      oauth_provider_not_allowed:
+        "Этот способ входа недоступен в вашем регионе.",
       oauth_account_link_required:
         "Аккаунт с таким email уже существует. Используйте прежний способ входа; автоматическая привязка отключена.",
       oauth_code_exchange_failed: "Не удалось принять OAuth-код.",
@@ -217,7 +266,8 @@ export const authMessages: Record<AuthLocale, AuthMessages> = {
         "Сервис входа не вернул данные аккаунта. Повторите попытку.",
       oauth_access_token_missing:
         "Сервис входа не вернул токен доступа. Начните вход заново.",
-      oauth_redirect_not_allowed:
+      oauth_origin_not_allowed: "Источник запроса на вход не разрешён.",
+      oauth_redirect_uri_not_allowed:
         "Адрес возврата после входа не разрешён.",
       oauth_email_missing:
         "Сервис входа не вернул подходящий email.",
@@ -257,8 +307,8 @@ export function resolveAuthErrorMessage(
   messages: AuthMessages,
   fallback = messages.common.error,
 ): string {
-  if (error instanceof AuthApiError) {
-    return messages.errors[error.code] ?? fallback;
+  if (isApiError(error)) {
+    return isAuthErrorCode(error.code) ? messages.errors[error.code] : fallback;
   }
   return error instanceof Error ? error.message : fallback;
 }

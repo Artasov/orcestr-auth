@@ -1,6 +1,6 @@
 {
   "name": "@orcestr/auth-react",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "React Query provider and hooks for Orcestr authentication.",
   "author": "Artasov",
   "license": "MPL-2.0",
@@ -38,7 +38,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@orcestr/auth-core": "0.2.1"
+    "@orcestr/auth-core": "0.3.0"
   },
   "peerDependencies": {
     "@tanstack/react-query": "^5.99.0",

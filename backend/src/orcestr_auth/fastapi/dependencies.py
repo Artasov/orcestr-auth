@@ -4,11 +4,12 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any, Callable
 
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config import AuthConfig
+from ..errors import AuthErrorCode, auth_api_error
 from ..sqlalchemy import AuthModelSet, SqlAlchemyUserRepository, UserFieldMap
 from ..tokens import TokenCodec, TokenPayloadError
 
@@ -55,13 +56,19 @@ def create_auth_dependencies(
             _require_cookie_csrf(request)
         if not token:
             if required:
-                raise HTTPException(status.HTTP_401_UNAUTHORIZED, "not_authenticated")
+                raise auth_api_error(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    code=AuthErrorCode.NOT_AUTHENTICATED,
+                )
             return None
         try:
             payload = codec.decode(token, "access")
         except TokenPayloadError as exc:
             if required:
-                raise HTTPException(status.HTTP_401_UNAUTHORIZED, str(exc)) from exc
+                raise auth_api_error(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    code=AuthErrorCode.SESSION_INVALID,
+                ) from exc
             return None
         user_id = _coerce_id(payload["sub"], user_fields.id.property.columns[0].type)
         session_id = payload.get("sid")
@@ -74,15 +81,19 @@ def create_auth_dependencies(
                 or _aware(auth_session.expires_at) <= datetime.now(UTC)
             ):
                 if required:
-                    raise HTTPException(
-                        status.HTTP_401_UNAUTHORIZED, "session_expired"
+                    raise auth_api_error(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        code=AuthErrorCode.SESSION_EXPIRED,
                     )
                 return None
         users = SqlAlchemyUserRepository(session, user_model, user_fields)
         user = await users.get_by_id(user_id)
         if user is None or not users.is_active(user):
             if required:
-                raise HTTPException(status.HTTP_401_UNAUTHORIZED, "user_not_found")
+                raise auth_api_error(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    code=AuthErrorCode.SESSION_INVALID,
+                )
             return None
         return user
 
@@ -108,7 +119,10 @@ def _require_cookie_csrf(request: Request) -> None:
         return
     if request.headers.get("x-requested-with", "").lower() == "xmlhttprequest":
         return
-    raise HTTPException(status.HTTP_403_FORBIDDEN, "csrf_header_missing")
+    raise auth_api_error(
+        status_code=status.HTTP_403_FORBIDDEN,
+        code=AuthErrorCode.CSRF_HEADER_MISSING,
+    )
 
 
 def _aware(value: datetime) -> datetime:

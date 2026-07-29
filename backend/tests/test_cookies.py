@@ -1,7 +1,7 @@
 from fastapi import Response
 
 from orcestr_auth import AuthConfig, CookieConfig
-from orcestr_auth.cookies import clear_auth_cookies, set_auth_cookies
+from orcestr_auth.fastapi import clear_auth_cookies, set_auth_cookies
 
 
 def test_cookie_set_and_delete_attributes_are_symmetric() -> None:

@@ -3,7 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from urllib.parse import urlparse
 
-from fastapi import HTTPException, Request, status
+from fastapi import Request, status
+
+from ..errors import AuthErrorCode, auth_api_error
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,7 +51,10 @@ class OAuthRedirectPolicy:
         if query_origin and self.is_allowed_origin(query_origin, request):
             return query_origin
         if explicit_origin:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "oauth_origin_not_allowed")
+            raise auth_api_error(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                code=AuthErrorCode.OAUTH_ORIGIN_NOT_ALLOWED,
+            )
         header_origin = self.clean_origin(request.headers.get("origin"))
         if header_origin and self.is_allowed_origin(header_origin, request):
             return header_origin
@@ -79,7 +84,7 @@ class OAuthRedirectPolicy:
             or parsed.query
             or parsed.fragment
         ):
-            raise HTTPException(
-                status.HTTP_400_BAD_REQUEST,
-                "oauth_redirect_uri_not_allowed",
+            raise auth_api_error(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                code=AuthErrorCode.OAUTH_REDIRECT_URI_NOT_ALLOWED,
             )

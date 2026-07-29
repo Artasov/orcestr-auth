@@ -5,6 +5,8 @@ import {
   resolveLogOptions,
   type CutieLogOptions,
 } from "cutie-logs";
+import { ApiClient } from "@orcestr/core";
+import { AuthSessionManager } from "./session.js";
 
 export type AuthUser = {
   id: number | string;
@@ -45,25 +47,12 @@ export type AuthClientOptions = {
   logging?: boolean | CutieLogOptions;
 };
 
-export class AuthApiError extends Error {
-  constructor(
-    public readonly status: number,
-    public readonly code: string,
-    message = code,
-  ) {
-    super(message);
-    this.name = "AuthApiError";
-  }
-}
-
-export function isAuthApiError(error: unknown): error is AuthApiError {
-  return error instanceof AuthApiError;
-}
-
 export class AuthClient<TUser extends AuthUser = AuthUser> {
   readonly routes: AuthClientRoutes;
   private readonly fetcher: typeof globalThis.fetch;
   private readonly logging: ReturnType<typeof resolveLogOptions> | null;
+  private readonly api: ApiClient;
+  private readonly session: AuthSessionManager;
 
   constructor(options: AuthClientOptions) {
     this.routes = options.routes;
@@ -81,6 +70,24 @@ export class AuthClient<TUser extends AuthUser = AuthUser> {
               : "AUTH",
         })
       : null;
+    this.session = new AuthSessionManager({
+      execute: (input, init) => this.fetch(requestUrl(input), init ?? {}),
+      refresh: () =>
+        this.fetch(this.routes.refresh, {
+          method: "POST",
+          credentials: "include",
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+        }),
+    });
+    this.api = new ApiClient({
+      execute: async (input, init) => {
+        const url = requestUrl(input);
+        const result = await this.session.request(input, init, {
+          allowRefresh: this.canRefreshFor(url),
+        });
+        return result.response;
+      },
+    });
   }
 
   methods(origin?: string): Promise<AuthMethods> {
@@ -156,34 +163,18 @@ export class AuthClient<TUser extends AuthUser = AuthUser> {
   private async request<T>(
     url: string,
     init: RequestInit,
-    allowRefresh = true,
   ): Promise<T> {
-    let response = await this.fetch(url, {
+    const headers = new Headers(init.headers);
+    if (!headers.has("Content-Type")) {
+      headers.set("Content-Type", "application/json");
+    }
+    headers.set("X-Requested-With", "XMLHttpRequest");
+    return this.api.request<T>(url, {
       ...init,
+      signal: init.signal ?? undefined,
       credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Requested-With": "XMLHttpRequest",
-        ...init.headers,
-      },
+      headers,
     });
-    if (response.status === 401 && allowRefresh && this.canRefreshFor(url)) {
-      const refreshed = await this.fetch(this.routes.refresh, {
-        method: "POST",
-        credentials: "include",
-        headers: { "X-Requested-With": "XMLHttpRequest" },
-      });
-      if (refreshed.ok) {
-        return this.request<T>(url, init, false);
-      }
-    }
-    if (!response.ok) {
-      const body = await readResponseBody(response);
-      const { code, message } = parseAuthErrorBody(body, response.status);
-      throw new AuthApiError(response.status, code, message);
-    }
-    if (response.status === 204) return undefined as T;
-    return (await response.json()) as T;
   }
 
   private canRefreshFor(url: string): boolean {
@@ -348,32 +339,6 @@ export class AuthClient<TUser extends AuthUser = AuthUser> {
   }
 }
 
-function parseAuthErrorBody(
-  body: unknown,
-  status: number,
-): { code: string; message: string } {
-  const fallback = `auth_http_${status}`;
-  if (typeof body === "string" && body.trim()) {
-    return { code: body, message: body };
-  }
-  if (!isRecord(body)) return { code: fallback, message: fallback };
-
-  const nestedError = isRecord(body.error) ? body.error : null;
-  const code = firstString(
-    nestedError?.code,
-    typeof body.error === "string" ? body.error : undefined,
-    body.code,
-    body.detail,
-  ) ?? fallback;
-  const message = firstString(
-    nestedError?.message,
-    body.message,
-    body.detail,
-    code,
-  ) ?? code;
-  return { code, message };
-}
-
 async function readResponseBody(response: Response): Promise<unknown> {
   if (response.status === 204) return undefined;
   const text = await response.text().catch(() => "");
@@ -395,17 +360,6 @@ function normalizeRequestBody(body: BodyInit | null | undefined): unknown {
   }
 }
 
-function firstString(...values: unknown[]): string | undefined {
-  return values.find(
-    (value): value is string =>
-      typeof value === "string" && value.trim().length > 0,
-  );
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
 function nowMs(): number {
   return typeof performance !== "undefined" && typeof performance.now === "function"
     ? performance.now()
@@ -414,4 +368,10 @@ function nowMs(): number {
 
 function style(color: string): string {
   return `color: ${color}; font-weight: bold;`;
+}
+
+function requestUrl(input: RequestInfo | URL): string {
+  if (typeof input === "string") return input;
+  if (input instanceof URL) return input.toString();
+  return input.url;
 }

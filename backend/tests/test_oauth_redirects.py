@@ -1,5 +1,5 @@
 import pytest
-from fastapi import HTTPException
+from orcestr_core import ApiError
 from starlette.requests import Request
 
 from orcestr_auth.fastapi import OAuthRedirectPolicy
@@ -25,15 +25,17 @@ def test_callback_policy_accepts_configured_subdomains() -> None:
 
 def test_callback_policy_rejects_external_and_wrong_paths() -> None:
     policy = OAuthRedirectPolicy(allowed_domains=("example.com",))
-    with pytest.raises(HTTPException):
+    with pytest.raises(ApiError) as external:
         policy.validate_callback_uri(
             request(),
             "google",
             "https://evil.test/auth/oauth/google/callback",
         )
-    with pytest.raises(HTTPException):
+    assert external.value.code == "oauth_redirect_uri_not_allowed"
+    with pytest.raises(ApiError) as wrong_path:
         policy.validate_callback_uri(
             request(),
             "google",
             "https://app.example.com/auth/oauth/yandex/callback",
         )
+    assert wrong_path.value.code == "oauth_redirect_uri_not_allowed"

@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from orcestr_auth.config import AuthConfig, CookieConfig
 from orcestr_auth.contracts import AuthTokens, LoginInput, OAuthCallbackInput
 from orcestr_auth.fastapi import AuthResult, create_auth_router
+from orcestr_core.fastapi import register_api_error_handlers
 
 
 class UserResponse(BaseModel):
@@ -95,6 +96,7 @@ def build_app() -> tuple[FastAPI, FakeAuthApplication]:
         return {"id": 1, "username": "admin"}
 
     app = FastAPI()
+    register_api_error_handlers(app)
     app.include_router(
         create_auth_router(
             config=config,
@@ -125,7 +127,7 @@ async def test_browser_cookie_flow_requires_csrf_for_mutations() -> None:
 
         rejected = await client.post("/auth/refresh/")
         assert rejected.status_code == 403
-        assert rejected.json()["detail"] == "csrf_header_missing"
+        assert rejected.json()["error"]["code"] == "csrf_header_missing"
 
         refreshed = await client.post(
             "/auth/refresh/", headers={"x-requested-with": "XMLHttpRequest"}

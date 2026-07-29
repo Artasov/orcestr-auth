@@ -11,14 +11,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config import AuthConfig
 from ..contracts import AuthTokens
+from ..errors import AuthErrorCode
 from ..ports import UserRepository
 from ..sqlalchemy import AuthModelSet
 from ..tokens import TokenCodec
 
 
 class AuthSessionError(ValueError):
-    def __init__(self, code: str):
-        super().__init__(code)
+    def __init__(self, code: AuthErrorCode):
+        super().__init__(code.value)
         self.code = code
 
 
@@ -97,7 +98,7 @@ class AuthSessionService:
         user_agent: str | None = None,
     ) -> AuthTokens:
         if not raw_refresh:
-            raise AuthSessionError("refresh_token_missing")
+            raise AuthSessionError(AuthErrorCode.REFRESH_TOKEN_MISSING)
         token = await self.db.scalar(
             select(self.models.refresh_token)
             .where(
@@ -106,19 +107,19 @@ class AuthSessionService:
             .with_for_update()
         )
         if token is None:
-            raise AuthSessionError("refresh_token_invalid")
+            raise AuthSessionError(AuthErrorCode.REFRESH_TOKEN_INVALID)
         auth_session = await self.db.scalar(
             select(self.models.session)
             .where(self.models.session.id == token.session_id)
             .with_for_update()
         )
         if auth_session is None:
-            raise AuthSessionError("refresh_token_invalid")
+            raise AuthSessionError(AuthErrorCode.REFRESH_TOKEN_INVALID)
         now = self.now()
         if token.used_at is not None or token.revoked_at is not None:
             await self._revoke_session(auth_session.id, now)
             await self.db.commit()
-            raise AuthSessionError("refresh_token_reused")
+            raise AuthSessionError(AuthErrorCode.REFRESH_TOKEN_REUSED)
         if (
             auth_session.revoked_at is not None
             or aware_utc(auth_session.expires_at) <= now
@@ -126,12 +127,12 @@ class AuthSessionService:
         ):
             await self._revoke_session(auth_session.id, now)
             await self.db.commit()
-            raise AuthSessionError("refresh_token_expired")
+            raise AuthSessionError(AuthErrorCode.REFRESH_TOKEN_EXPIRED)
         user = await self.users.get_by_id(auth_session.user_id)
         if user is None or not self.users.is_active(user):
             await self._revoke_session(auth_session.id, now)
             await self.db.commit()
-            raise AuthSessionError("user_inactive")
+            raise AuthSessionError(AuthErrorCode.USER_INACTIVE)
         token.used_at = now
         auth_session.last_used_at = now
         if ip_address:

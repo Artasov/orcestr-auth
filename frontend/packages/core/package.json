@@ -1,6 +1,6 @@
 {
   "name": "@orcestr/auth-core",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Framework-independent Orcestr authentication client and redirect helpers.",
   "author": "Artasov",
   "license": "MPL-2.0",
@@ -42,6 +42,7 @@
     "build": "tsc -b"
   },
   "dependencies": {
+    "@orcestr/core": "0.1.0",
     "cutie-logs": "0.1.5"
   }
 }

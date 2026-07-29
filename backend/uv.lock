@@ -424,9 +424,10 @@ wheels = [
 
 [[package]]
 name = "orcestr-auth"
-version = "0.2.0"
+version = "0.3.0"
 source = { editable = "." }
 dependencies = [
+    { name = "orcestr-core" },
     { name = "passlib" },
     { name = "pydantic" },
     { name = "python-jose", extra = ["cryptography"] },
@@ -441,6 +442,7 @@ all = [
 ]
 fastapi = [
     { name = "fastapi" },
+    { name = "sqlalchemy" },
 ]
 oauth = [
     { name = "httpx" },
@@ -468,10 +470,12 @@ requires-dist = [
     { name = "fastapi", marker = "extra == 'fastapi'", specifier = ">=0.128,<1" },
     { name = "httpx", marker = "extra == 'all'", specifier = ">=0.28,<1" },
     { name = "httpx", marker = "extra == 'oauth'", specifier = ">=0.28,<1" },
+    { name = "orcestr-core", specifier = ">=0.1,<0.2" },
     { name = "passlib", specifier = ">=1.7.4,<2" },
     { name = "pydantic", specifier = ">=2.12,<3" },
     { name = "python-jose", extras = ["cryptography"], specifier = ">=3.5,<4" },
     { name = "sqlalchemy", marker = "extra == 'all'", specifier = ">=2.0.45,<3" },
+    { name = "sqlalchemy", marker = "extra == 'fastapi'", specifier = ">=2.0.45,<3" },
     { name = "sqlalchemy", marker = "extra == 'sqlalchemy'", specifier = ">=2.0.45,<3" },
 ]
 provides-extras = ["fastapi", "sqlalchemy", "oauth", "all"]
@@ -484,6 +488,18 @@ dev = [
     { name = "pytest", specifier = ">=9,<10" },
     { name = "pytest-asyncio", specifier = ">=1.3,<2" },
     { name = "sqlalchemy", specifier = ">=2.0.45,<3" },
+]
+
+[[package]]
+name = "orcestr-core"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ee/57/e0093e02a0fed735d9a21b012af393a71242c21ed54a618eae7990d7a1b5/orcestr_core-0.1.0.tar.gz", hash = "sha256:d8dc407a7a1f1520c4fa7678733b896eab659eb6db132f906ff270b4aa842ed5", size = 12886, upload-time = "2026-07-29T18:33:33.27Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/73/25/e252fe6ce5f78ad372e1a907cdfeaf3ef6fdcc9cec9573d0ec94c74b1642/orcestr_core-0.1.0-py3-none-any.whl", hash = "sha256:503f5f010b9ee72303adb182e417dad8cd1fb2393016057aa2677d933ce5d1a8", size = 13826, upload-time = "2026-07-29T18:33:32.35Z" },
 ]
 
 [[package]]

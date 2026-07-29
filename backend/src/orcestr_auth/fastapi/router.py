@@ -17,7 +17,7 @@ from ..contracts import (
     RefreshTokenInput,
     RegisterInput,
 )
-from ..cookies import clear_auth_cookies, set_auth_cookies
+from .cookies import clear_auth_cookies, set_auth_cookies
 
 
 @dataclass(frozen=True, slots=True)
@@ -285,9 +285,12 @@ def _require_cookie_csrf(request: Request, config: AuthConfig) -> None:
     ):
         return
     if request.headers.get("x-requested-with", "").lower() != "xmlhttprequest":
-        from fastapi import HTTPException
+        from ..errors import AuthErrorCode, auth_api_error
 
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "csrf_header_missing")
+        raise auth_api_error(
+            status_code=status.HTTP_403_FORBIDDEN,
+            code=AuthErrorCode.CSRF_HEADER_MISSING,
+        )
 
 
 def _browser_response_model(user_model: Any) -> Any:

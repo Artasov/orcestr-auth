@@ -1,5 +1,6 @@
 import { safeRedirectPath } from "@orcestr/auth-core";
-import { NextResponse, type NextRequest } from "next/server";
+import { requestInternalPath } from "@orcestr/core-next";
+import { NextResponse, type NextRequest } from "next/server.js";
 
 export type AuthProxyOptions = {
   accessCookieName?: string;
@@ -40,8 +41,5 @@ export function requestAuthNext(
   request: NextRequest,
   fallback = "/overview",
 ): string {
-  return safeRedirectPath(
-    `${request.nextUrl.pathname}${request.nextUrl.search}${request.nextUrl.hash}`,
-    fallback,
-  );
+  return safeRedirectPath(requestInternalPath(request, fallback), fallback);
 }
