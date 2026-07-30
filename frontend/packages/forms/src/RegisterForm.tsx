@@ -2,12 +2,15 @@
 
 import type { AuthMethods, AuthUser } from "@orcestr/auth-core";
 import { useRegister } from "@orcestr/auth-react";
-import { Button, Flex, Text } from "@orcestr/ui";
+import { Button, Flex, Link } from "@orcestr/ui";
 import { useState, type ReactNode } from "react";
 
 import { AuthField, AuthFormError, AuthTextField } from "./fields.js";
 import { useAuthMessages } from "./i18n.js";
-import { OAuthButtons } from "./OAuthButtons.js";
+import {
+  OAuthButtons,
+  type OAuthButtonsOptions,
+} from "./OAuthButtons.js";
 
 export function RegisterForm<TUser extends AuthUser = AuthUser>({
   loginHref,
@@ -17,6 +20,7 @@ export function RegisterForm<TUser extends AuthUser = AuthUser>({
   methods,
   next = "/overview",
   disabled = false,
+  oauthButtons,
 }: {
   loginHref?: string;
   extraPayload?: Record<string, unknown> | (() => Record<string, unknown>);
@@ -25,6 +29,7 @@ export function RegisterForm<TUser extends AuthUser = AuthUser>({
   methods?: AuthMethods;
   next?: string;
   disabled?: boolean;
+  oauthButtons?: OAuthButtonsOptions;
 }) {
   const copy = useAuthMessages();
   const [username, setUsername] = useState("");
@@ -57,6 +62,7 @@ export function RegisterForm<TUser extends AuthUser = AuthUser>({
           providers={methods?.allowed_oauth_providers ?? []}
           clientIds={methods?.oauth_client_ids ?? {}}
           next={next}
+          {...oauthButtons}
         />
         <AuthFormError error={mutation.error} fallback={copy.common.error} />
         <AuthField label={copy.register.username}>
@@ -111,9 +117,9 @@ export function RegisterForm<TUser extends AuthUser = AuthUser>({
           {mutation.isPending ? copy.register.submitting : copy.register.submit}
         </Button>
         {loginHref ? (
-          <Text fs={14}>
-            <a href={loginHref}>{copy.register.login}</a>
-          </Text>
+          <Link href={loginHref} fs={14}>
+            {copy.register.login}
+          </Link>
         ) : null}
       </Flex>
     </form>

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1 - Unreleased
+
+- Added semantic accent-hover links to the ready auth forms.
+- Added reusable and provider-specific OAuth button components with configurable layout.
+
 ## 0.3.0 - Unreleased
 
 - Added Orcestr ecosystem branding and the shared repository banner.

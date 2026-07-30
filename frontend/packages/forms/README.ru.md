@@ -48,3 +48,40 @@ import { AuthI18nProvider, LoginForm } from '@orcestr/auth-forms';
 `extraPayload` и `legalContent`. Consumer собирает страницы из семантического HTML и
 существующих layout primitives `@orcestr/ui`; application routes и surface-aware navigation
 остаются локальными.
+
+## Компоненты OAuth-кнопок
+
+По умолчанию OAuth-провайдеры отображаются стандартными полноразмерными кнопками. Продукт может
+одним компонентом заменить все кнопки, отдельно переопределить нужных провайдеров и выбрать
+компоновку группы, не копируя логику авторизации:
+
+```tsx
+import {
+    LoginForm,
+    type OAuthProviderButtonProps,
+} from '@orcestr/auth-forms';
+import { IconButton, Tooltip } from '@orcestr/ui';
+import { FcGoogle } from 'react-icons/fc';
+
+function GoogleButton({ label, onClick }: OAuthProviderButtonProps) {
+    return (
+        <Tooltip content={label}>
+            <IconButton type="button" aria-label={label} onClick={onClick} round>
+                <FcGoogle />
+            </IconButton>
+        </Tooltip>
+    );
+}
+
+<LoginForm
+    methods={methods}
+    oauthButtons={{
+        direction: 'row',
+        justify: 'center',
+        buttonComponents: { google: GoogleButton },
+    }}
+/>;
+```
+
+Компонент получает провайдера, локализованную доступную подпись и готовое действие `onClick`.
+Client ID, PKCE, state, redirect URI и навигация остаются внутри библиотеки.

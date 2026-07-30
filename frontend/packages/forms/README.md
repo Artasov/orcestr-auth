@@ -47,3 +47,40 @@ import { AuthI18nProvider, LoginForm } from '@orcestr/auth-forms';
 Forms expose callbacks, links, slots and product extensions such as registration
 `extraPayload` and `legalContent`. The consumer composes pages from semantic HTML and existing
 `@orcestr/ui` layout primitives; application routes and surface-aware navigation stay local.
+
+## OAuth button components
+
+OAuth providers use the standard full-width button by default. A product can replace all provider
+buttons with one component, override individual providers, and choose the group layout without
+copying authorization logic:
+
+```tsx
+import {
+    LoginForm,
+    type OAuthProviderButtonProps,
+} from '@orcestr/auth-forms';
+import { IconButton, Tooltip } from '@orcestr/ui';
+import { FcGoogle } from 'react-icons/fc';
+
+function GoogleButton({ label, onClick }: OAuthProviderButtonProps) {
+    return (
+        <Tooltip content={label}>
+            <IconButton type="button" aria-label={label} onClick={onClick} round>
+                <FcGoogle />
+            </IconButton>
+        </Tooltip>
+    );
+}
+
+<LoginForm
+    methods={methods}
+    oauthButtons={{
+        direction: 'row',
+        justify: 'center',
+        buttonComponents: { google: GoogleButton },
+    }}
+/>;
+```
+
+The component receives the provider, a localized accessible label and the ready `onClick`
+authorization action. Client IDs, PKCE, state, redirect URI and navigation remain library-owned.
