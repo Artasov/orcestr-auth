@@ -135,6 +135,31 @@ test("public login errors and forbidden responses never trigger refresh", async 
   assert.deepEqual(calls, ["/login"]);
 });
 
+test("login includes action metadata without allowing it to replace credentials", async () => {
+  let body;
+  const client = new AuthClient({
+    routes,
+    fetch: async (_url, init) => {
+      body = JSON.parse(init.body);
+      return new Response(
+        JSON.stringify({ user: { id: 1, username: "real-user" } }),
+        { status: 200 },
+      );
+    },
+  });
+
+  await client.login("real-user", "real-password", {
+    username: "forged-user",
+    accepted_legal_documents: [{ document_slug: "terms", version: "2" }],
+  });
+
+  assert.deepEqual(body, {
+    username: "real-user",
+    password: "real-password",
+    accepted_legal_documents: [{ document_slug: "terms", version: "2" }],
+  });
+});
+
 test("failed refresh is reported without retrying the protected request", async () => {
   let requestCalls = 0;
   let refreshCalls = 0;
@@ -161,7 +186,10 @@ test("structured API errors preserve their code and human-readable message", asy
     fetch: async () =>
       new Response(
         JSON.stringify({
-          error: { code: "authentication_required", message: "Authentication required" },
+          error: {
+            code: "authentication_required",
+            message: "Authentication required",
+          },
         }),
         { status: 401 },
       ),
@@ -194,8 +222,8 @@ test("auth request logging redacts sensitive payload fields", async () => {
   });
 
   await client.login("user", "secret");
-  assert.deepEqual(
-    entries.find((entry) => entry[0] === "%cRequest data:")[2],
-    { username: "user", password: "[redacted]" },
-  );
+  assert.deepEqual(entries.find((entry) => entry[0] === "%cRequest data:")[2], {
+    username: "user",
+    password: "[redacted]",
+  });
 });

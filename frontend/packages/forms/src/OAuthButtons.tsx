@@ -10,12 +10,17 @@ export type OAuthProviderButtonProps = {
   provider: OAuthProvider;
   label: string;
   onClick: () => void;
+  disabled?: boolean;
 };
 
 export type OAuthProviderButtonComponent =
   ComponentType<OAuthProviderButtonProps>;
 
+export type OAuthButtonsPlacement =
+  "before-fields" | "after-submit" | "after-links";
+
 export type OAuthButtonsOptions = {
+  placement?: OAuthButtonsPlacement;
   direction?: "row" | "column";
   align?: FlexProps["a"];
   justify?: FlexProps["j"];
@@ -27,18 +32,32 @@ export type OAuthButtonsOptions = {
   >;
 };
 
+export type OAuthAuthorizeRequest = {
+  provider: OAuthProvider;
+  authorize: (callbackPayload?: Record<string, unknown>) => Promise<void>;
+};
+
 export type OAuthButtonsProps = OAuthButtonsOptions & {
   providers: OAuthProvider[];
   clientIds: Partial<Record<OAuthProvider, string>>;
   next: string;
+  disabled?: boolean;
+  onAuthorize?: (request: OAuthAuthorizeRequest) => void | Promise<void>;
 };
 
 function DefaultOAuthProviderButton({
   label,
   onClick,
+  disabled,
 }: OAuthProviderButtonProps) {
   return (
-    <Button type="button" v="soft" size={3} onClick={onClick}>
+    <Button
+      type="button"
+      v="soft"
+      size={3}
+      disabled={disabled}
+      onClick={onClick}
+    >
       {label}
     </Button>
   );
@@ -55,6 +74,8 @@ export function OAuthButtons({
   className,
   buttonComponent,
   buttonComponents,
+  onAuthorize,
+  disabled = false,
 }: OAuthButtonsProps) {
   const copy = useAuthMessages().oauth;
   const visible = providers.filter((provider) =>
@@ -80,14 +101,19 @@ export function OAuthButtons({
           "{provider}",
           copy.providers[provider],
         );
+        const authorize = async (callbackPayload?: Record<string, unknown>) => {
+          window.location.href = await buildOAuthAuthorizeUrl({
+            provider,
+            clientId: clientIds[provider] ?? "",
+            next,
+            callbackPayload,
+          });
+        };
         const onClick = () => {
-          void (async () => {
-            window.location.href = await buildOAuthAuthorizeUrl({
-              provider,
-              clientId: clientIds[provider] ?? "",
-              next,
-            });
-          })();
+          if (disabled) return;
+          void (onAuthorize
+            ? onAuthorize({ provider, authorize })
+            : authorize());
         };
 
         return (
@@ -96,6 +122,7 @@ export function OAuthButtons({
             provider={provider}
             label={label}
             onClick={onClick}
+            disabled={disabled}
           />
         );
       })}

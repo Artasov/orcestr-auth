@@ -33,14 +33,14 @@ Complete English and Russian dictionaries are built in. The application selects 
 may override product wording without copying the forms:
 
 ```tsx
-import { AuthI18nProvider, LoginForm } from '@orcestr/auth-forms';
+import { AuthI18nProvider, LoginForm } from "@orcestr/auth-forms";
 
 <AuthI18nProvider locale="en">
-    <LoginForm
-        next="/deliveries/overview"
-        registerHref="/register?next=%2Fdeliveries%2Foverview"
-        onSuccess={(user) => router.replace('/deliveries/overview')}
-    />
+  <LoginForm
+    next="/deliveries/overview"
+    registerHref="/register?next=%2Fdeliveries%2Foverview"
+    onSuccess={(user) => router.replace("/deliveries/overview")}
+  />
 </AuthI18nProvider>;
 ```
 
@@ -55,32 +55,62 @@ buttons with one component, override individual providers, and choose the group 
 copying authorization logic:
 
 ```tsx
-import {
-    LoginForm,
-    type OAuthProviderButtonProps,
-} from '@orcestr/auth-forms';
-import { IconButton, Tooltip } from '@orcestr/ui';
-import { FcGoogle } from 'react-icons/fc';
+import { LoginForm, type OAuthProviderButtonProps } from "@orcestr/auth-forms";
+import { IconButton, Tooltip } from "@orcestr/ui";
+import { FcGoogle } from "react-icons/fc";
 
 function GoogleButton({ label, onClick }: OAuthProviderButtonProps) {
-    return (
-        <Tooltip content={label}>
-            <IconButton type="button" aria-label={label} onClick={onClick} round>
-                <FcGoogle />
-            </IconButton>
-        </Tooltip>
-    );
+  return (
+    <Tooltip content={label}>
+      <IconButton type="button" aria-label={label} onClick={onClick} round>
+        <FcGoogle />
+      </IconButton>
+    </Tooltip>
+  );
 }
 
 <LoginForm
-    methods={methods}
-    oauthButtons={{
-        direction: 'row',
-        justify: 'center',
-        buttonComponents: { google: GoogleButton },
-    }}
+  methods={methods}
+  oauthButtons={{
+    placement: "after-submit",
+    direction: "row",
+    justify: "center",
+    buttonComponents: { google: GoogleButton },
+  }}
 />;
 ```
 
 The component receives the provider, a localized accessible label and the ready `onClick`
 authorization action. Client IDs, PKCE, state, redirect URI and navigation remain library-owned.
+
+`placement` accepts `before-fields`, `after-submit`, or `after-links` and works in both login
+and registration forms.
+
+## Versioned legal consent
+
+`LoginForm` and `RegisterForm` can guard password and OAuth actions with the same configurable
+legal-document modal. Documents are application-owned and may come from a database; the package
+only handles presentation, required/optional checkboxes, action continuation, and payload transfer
+through the OAuth callback state.
+
+```tsx
+<LoginForm
+  legalConsent={{
+    documents: legalDocuments.map((document) => ({
+      id: document.slug,
+      title: document.title,
+      version: document.version,
+      href: `/legal/${document.slug}`,
+      required: document.required,
+      acceptance: {
+        document_slug: document.slug,
+        version: document.version,
+        language: document.language,
+      },
+    })),
+  }}
+/>
+```
+
+Set `enabled: false` to disable the gate. Use `payloadKey` or `buildPayload` when the backend uses
+a different acceptance contract. Any number of legal documents is supported.

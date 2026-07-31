@@ -26,6 +26,7 @@ export function AuthTextField(props: {
   type?: string;
   autoComplete?: string;
   placeholder?: string;
+  disabled?: boolean;
 }) {
   return <TextField size="3" {...props} />;
 }

@@ -29,6 +29,27 @@ test("OAuth provider buttons support shared and provider-specific components", (
     /buttonComponents\?\.\[provider\] \?\?[\s\S]*buttonComponent \?\?[\s\S]*DefaultOAuthProviderButton/,
   );
   assert.match(buttons, /direction\?: "row" \| "column"/);
+  assert.match(buttons, /placement\?: OAuthButtonsPlacement/);
+  assert.match(buttons, /"after-submit"/);
   assert.match(login, /oauthButtons\?: OAuthButtonsOptions/);
   assert.match(register, /oauthButtons\?: OAuthButtonsOptions/);
+});
+
+test("login, registration and OAuth share the versioned legal consent gate", () => {
+  const legal = read("../packages/forms/src/LegalConsent.tsx");
+  const oauth = read("../packages/forms/src/OAuthButtons.tsx");
+  const login = read("../packages/forms/src/LoginForm.tsx");
+  const register = read("../packages/forms/src/RegisterForm.tsx");
+
+  assert.match(legal, /export type AuthLegalDocument/);
+  assert.match(legal, /version: string/);
+  assert.match(legal, /required\?: boolean/);
+  assert.match(legal, /acceptance: Record<string, unknown>/);
+  assert.match(legal, /selectedDocumentIds/);
+  assert.match(legal, /requiredAccepted/);
+  assert.match(oauth, /callbackPayload/);
+  assert.match(login, /legal\.request/);
+  assert.match(login, /buildAuthLegalPayload/);
+  assert.match(register, /legal\.request/);
+  assert.match(register, /buildAuthLegalPayload/);
 });

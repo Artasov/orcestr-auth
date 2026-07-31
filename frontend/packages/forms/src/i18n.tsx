@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  isAuthErrorCode,
-  type AuthErrorCode,
-} from "@orcestr/auth-core";
+import { isAuthErrorCode, type AuthErrorCode } from "@orcestr/auth-core";
 import { isApiError } from "@orcestr/core";
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 
@@ -57,6 +54,15 @@ export type AuthMessages = {
   oauth: {
     signInWith: string;
     providers: Record<"github" | "google" | "yandex", string>;
+  };
+  legal: {
+    title: string;
+    description: string;
+    acceptPrefix: string;
+    version: string;
+    optional: string;
+    confirm: string;
+    cancel: string;
   };
   errors: Record<AuthErrorCode, string>;
 };
@@ -118,6 +124,16 @@ export const authMessages: Record<AuthLocale, AuthMessages> = {
     oauth: {
       signInWith: "Sign in with {provider}",
       providers: { github: "GitHub", google: "Google", yandex: "Yandex" },
+    },
+    legal: {
+      title: "Review and accept the legal documents",
+      description:
+        "Please review the current versions before continuing. Your acceptance will be recorded for these versions.",
+      acceptPrefix: "I accept",
+      version: "Version",
+      optional: "optional",
+      confirm: "Accept and continue",
+      cancel: "Cancel",
     },
     errors: {
       invalid_credentials: "Invalid email, username or password.",
@@ -223,6 +239,16 @@ export const authMessages: Record<AuthLocale, AuthMessages> = {
       signInWith: "Войти через {provider}",
       providers: { github: "GitHub", google: "Google", yandex: "Яндекс" },
     },
+    legal: {
+      title: "Ознакомьтесь и примите документы",
+      description:
+        "Перед продолжением ознакомьтесь с актуальными версиями. Принятие будет сохранено именно для этих версий.",
+      acceptPrefix: "Я принимаю",
+      version: "Версия",
+      optional: "необязательно",
+      confirm: "Принять и продолжить",
+      cancel: "Отмена",
+    },
     errors: {
       invalid_credentials: "Неверный email, логин или пароль.",
       not_authenticated: "Войдите, чтобы продолжить.",
@@ -244,8 +270,7 @@ export const authMessages: Record<AuthLocale, AuthMessages> = {
         "Слишком много запросов восстановления. Повторите позже.",
       password_reset_code_invalid: "Код восстановления неверен или истёк.",
       password_reset_attempts_exceeded: "Слишком много неверных попыток.",
-      verification_resend_too_soon:
-        "Подождите перед повторной отправкой кода.",
+      verification_resend_too_soon: "Подождите перед повторной отправкой кода.",
       verification_code_invalid: "Код подтверждения неверен или истёк.",
       verification_attempts_exceeded: "Слишком много неверных попыток.",
       current_password_invalid: "Текущий пароль введён неверно.",
@@ -267,10 +292,8 @@ export const authMessages: Record<AuthLocale, AuthMessages> = {
       oauth_access_token_missing:
         "Сервис входа не вернул токен доступа. Начните вход заново.",
       oauth_origin_not_allowed: "Источник запроса на вход не разрешён.",
-      oauth_redirect_uri_not_allowed:
-        "Адрес возврата после входа не разрешён.",
-      oauth_email_missing:
-        "Сервис входа не вернул подходящий email.",
+      oauth_redirect_uri_not_allowed: "Адрес возврата после входа не разрешён.",
+      oauth_email_missing: "Сервис входа не вернул подходящий email.",
       csrf_header_missing: "Не пройдена проверка безопасности запроса.",
     },
   },

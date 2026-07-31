@@ -5,6 +5,7 @@ export type StoredOAuthState = {
   state: string;
   returnTo: string;
   createdAt: number;
+  callbackPayload?: Record<string, unknown>;
 };
 
 const STATE_TTL_MS = 10 * 60 * 1000;
@@ -27,6 +28,7 @@ export function oauthRedirectUri(
 export function createOAuthState(
   provider: OAuthProvider,
   next: string,
+  callbackPayload?: Record<string, unknown>,
 ): string {
   assertBrowser();
   const state = randomBase64Url(24);
@@ -34,6 +36,7 @@ export function createOAuthState(
     state,
     returnTo: safeRedirectPath(next),
     createdAt: Date.now(),
+    callbackPayload,
   };
   sessionStorage.setItem(
     `orcestr_auth_state_${provider}`,
@@ -64,6 +67,10 @@ export function consumeOAuthState(
       state: parsed.state,
       returnTo: safeRedirectPath(parsed.returnTo),
       createdAt: parsed.createdAt,
+      callbackPayload:
+        parsed.callbackPayload && typeof parsed.callbackPayload === "object"
+          ? parsed.callbackPayload
+          : undefined,
     };
   } catch {
     return null;
@@ -85,12 +92,13 @@ export async function buildOAuthAuthorizeUrl(options: {
   clientId: string;
   next: string;
   redirectUri?: string;
+  callbackPayload?: Record<string, unknown>;
 }): Promise<string> {
   const { provider, clientId, next } = options;
   if (!clientId.trim()) throw new Error("oauth_client_id_missing");
   const redirectUri = options.redirectUri ?? oauthRedirectUri(provider);
   if (!redirectUri) throw new Error("oauth_redirect_uri_missing");
-  const state = createOAuthState(provider, next);
+  const state = createOAuthState(provider, next, options.callbackPayload);
   const verifier = randomBase64Url(48);
   sessionStorage.setItem(`orcestr_auth_verifier_${provider}`, verifier);
   const challenge = await sha256Base64Url(verifier);

@@ -33,14 +33,14 @@ npm install @orcestr/ui @tanstack/react-query react react-dom
 переопределять product wording без копирования форм:
 
 ```tsx
-import { AuthI18nProvider, LoginForm } from '@orcestr/auth-forms';
+import { AuthI18nProvider, LoginForm } from "@orcestr/auth-forms";
 
 <AuthI18nProvider locale="ru">
-    <LoginForm
-        next="/deliveries/overview"
-        registerHref="/register?next=%2Fdeliveries%2Foverview"
-        onSuccess={(user) => router.replace('/deliveries/overview')}
-    />
+  <LoginForm
+    next="/deliveries/overview"
+    registerHref="/register?next=%2Fdeliveries%2Foverview"
+    onSuccess={(user) => router.replace("/deliveries/overview")}
+  />
 </AuthI18nProvider>;
 ```
 
@@ -56,32 +56,62 @@ import { AuthI18nProvider, LoginForm } from '@orcestr/auth-forms';
 компоновку группы, не копируя логику авторизации:
 
 ```tsx
-import {
-    LoginForm,
-    type OAuthProviderButtonProps,
-} from '@orcestr/auth-forms';
-import { IconButton, Tooltip } from '@orcestr/ui';
-import { FcGoogle } from 'react-icons/fc';
+import { LoginForm, type OAuthProviderButtonProps } from "@orcestr/auth-forms";
+import { IconButton, Tooltip } from "@orcestr/ui";
+import { FcGoogle } from "react-icons/fc";
 
 function GoogleButton({ label, onClick }: OAuthProviderButtonProps) {
-    return (
-        <Tooltip content={label}>
-            <IconButton type="button" aria-label={label} onClick={onClick} round>
-                <FcGoogle />
-            </IconButton>
-        </Tooltip>
-    );
+  return (
+    <Tooltip content={label}>
+      <IconButton type="button" aria-label={label} onClick={onClick} round>
+        <FcGoogle />
+      </IconButton>
+    </Tooltip>
+  );
 }
 
 <LoginForm
-    methods={methods}
-    oauthButtons={{
-        direction: 'row',
-        justify: 'center',
-        buttonComponents: { google: GoogleButton },
-    }}
+  methods={methods}
+  oauthButtons={{
+    placement: "after-submit",
+    direction: "row",
+    justify: "center",
+    buttonComponents: { google: GoogleButton },
+  }}
 />;
 ```
 
 Компонент получает провайдера, локализованную доступную подпись и готовое действие `onClick`.
 Client ID, PKCE, state, redirect URI и навигация остаются внутри библиотеки.
+
+`placement` принимает `before-fields`, `after-submit` или `after-links` и одинаково работает в
+формах входа и регистрации.
+
+## Версионированное принятие документов
+
+`LoginForm` и `RegisterForm` могут защищать password- и OAuth-действия общей настраиваемой
+модалкой юридических документов. Сами документы принадлежат приложению и могут загружаться из БД;
+пакет отвечает за отображение, обязательные и необязательные галочки, продолжение действия и
+перенос payload через OAuth callback state.
+
+```tsx
+<LoginForm
+  legalConsent={{
+    documents: legalDocuments.map((document) => ({
+      id: document.slug,
+      title: document.title,
+      version: document.version,
+      href: `/legal/${document.slug}`,
+      required: document.required,
+      acceptance: {
+        document_slug: document.slug,
+        version: document.version,
+        language: document.language,
+      },
+    })),
+  }}
+/>
+```
+
+Для отключения gate используется `enabled: false`. Если backend ожидает другой контракт, можно
+задать `payloadKey` или `buildPayload`. Количество документов не ограничено.

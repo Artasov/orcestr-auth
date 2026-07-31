@@ -8,9 +8,11 @@ import { useState, type ReactNode } from "react";
 import { AuthField, AuthFormError, AuthTextField } from "./fields.js";
 import { useAuthMessages } from "./i18n.js";
 import {
-  OAuthButtons,
-  type OAuthButtonsOptions,
-} from "./OAuthButtons.js";
+  buildAuthLegalPayload,
+  type AuthLegalConsentOptions,
+  useAuthLegalConsent,
+} from "./LegalConsent.js";
+import { OAuthButtons, type OAuthButtonsOptions } from "./OAuthButtons.js";
 
 export function RegisterForm<TUser extends AuthUser = AuthUser>({
   loginHref,
@@ -21,6 +23,7 @@ export function RegisterForm<TUser extends AuthUser = AuthUser>({
   next = "/overview",
   disabled = false,
   oauthButtons,
+  legalConsent,
 }: {
   loginHref?: string;
   extraPayload?: Record<string, unknown> | (() => Record<string, unknown>);
@@ -30,6 +33,7 @@ export function RegisterForm<TUser extends AuthUser = AuthUser>({
   next?: string;
   disabled?: boolean;
   oauthButtons?: OAuthButtonsOptions;
+  legalConsent?: AuthLegalConsentOptions;
 }) {
   const copy = useAuthMessages();
   const [username, setUsername] = useState("");
@@ -38,32 +42,46 @@ export function RegisterForm<TUser extends AuthUser = AuthUser>({
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const mutation = useRegister<TUser>();
+  const legal = useAuthLegalConsent(legalConsent);
+  const oauthPlacement = oauthButtons?.placement ?? "before-fields";
+  const oauthBlock = (
+    <OAuthButtons
+      providers={methods?.allowed_oauth_providers ?? []}
+      clientIds={methods?.oauth_client_ids ?? {}}
+      next={next}
+      disabled={disabled}
+      {...oauthButtons}
+      onAuthorize={({ authorize }) =>
+        legal.request((acceptedDocuments) =>
+          authorize(buildAuthLegalPayload(legalConsent, acceptedDocuments)),
+        )
+      }
+    />
+  );
   return (
     <form
       onSubmit={(event) => {
         event.preventDefault();
         const extension =
           typeof extraPayload === "function" ? extraPayload() : extraPayload;
-        mutation.mutate(
-          {
-            username: username || undefined,
-            email,
-            password,
-            first_name: firstName || undefined,
-            last_name: lastName || undefined,
-            ...extension,
-          },
-          { onSuccess: ({ user }) => onSuccess?.(user) },
-        );
+        legal.request((acceptedDocuments) => {
+          mutation.mutate(
+            {
+              username: username || undefined,
+              email,
+              password,
+              first_name: firstName || undefined,
+              last_name: lastName || undefined,
+              ...extension,
+              ...buildAuthLegalPayload(legalConsent, acceptedDocuments),
+            },
+            { onSuccess: ({ user }) => onSuccess?.(user) },
+          );
+        });
       }}
     >
       <Flex col g="3">
-        <OAuthButtons
-          providers={methods?.allowed_oauth_providers ?? []}
-          clientIds={methods?.oauth_client_ids ?? {}}
-          next={next}
-          {...oauthButtons}
-        />
+        {oauthPlacement === "before-fields" ? oauthBlock : null}
         <AuthFormError error={mutation.error} fallback={copy.common.error} />
         <AuthField label={copy.register.username}>
           <AuthTextField
@@ -116,12 +134,15 @@ export function RegisterForm<TUser extends AuthUser = AuthUser>({
         >
           {mutation.isPending ? copy.register.submitting : copy.register.submit}
         </Button>
+        {oauthPlacement === "after-submit" ? oauthBlock : null}
         {loginHref ? (
           <Link href={loginHref} fs={14}>
             {copy.register.login}
           </Link>
         ) : null}
+        {oauthPlacement === "after-links" ? oauthBlock : null}
       </Flex>
+      {legal.dialog}
     </form>
   );
 }

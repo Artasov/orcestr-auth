@@ -8,9 +8,11 @@ import { useState } from "react";
 import { AuthField, AuthFormError, AuthTextField } from "./fields.js";
 import { useAuthMessages } from "./i18n.js";
 import {
-  OAuthButtons,
-  type OAuthButtonsOptions,
-} from "./OAuthButtons.js";
+  buildAuthLegalPayload,
+  type AuthLegalConsentOptions,
+  useAuthLegalConsent,
+} from "./LegalConsent.js";
+import { OAuthButtons, type OAuthButtonsOptions } from "./OAuthButtons.js";
 
 export function LoginForm<TUser extends AuthUser = AuthUser>({
   methods,
@@ -18,6 +20,9 @@ export function LoginForm<TUser extends AuthUser = AuthUser>({
   forgotPasswordHref,
   registerHref,
   oauthButtons,
+  extraPayload,
+  legalConsent,
+  disabled = false,
   onSuccess,
 }: {
   methods?: AuthMethods;
@@ -25,35 +30,61 @@ export function LoginForm<TUser extends AuthUser = AuthUser>({
   forgotPasswordHref?: string;
   registerHref?: string;
   oauthButtons?: OAuthButtonsOptions;
+  extraPayload?: Record<string, unknown> | (() => Record<string, unknown>);
+  legalConsent?: AuthLegalConsentOptions;
+  disabled?: boolean;
   onSuccess?: (user: TUser) => void;
 }) {
   const copy = useAuthMessages();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const mutation = useLogin<TUser>();
+  const legal = useAuthLegalConsent(legalConsent);
+  const oauthPlacement = oauthButtons?.placement ?? "before-fields";
+  const oauthBlock = (
+    <OAuthButtons
+      providers={methods?.allowed_oauth_providers ?? []}
+      clientIds={methods?.oauth_client_ids ?? {}}
+      next={next}
+      disabled={disabled}
+      {...oauthButtons}
+      onAuthorize={({ authorize }) =>
+        legal.request((acceptedDocuments) =>
+          authorize(buildAuthLegalPayload(legalConsent, acceptedDocuments)),
+        )
+      }
+    />
+  );
   return (
     <form
       onSubmit={(event) => {
         event.preventDefault();
-        mutation.mutate(
-          { username, password },
-          { onSuccess: ({ user }) => onSuccess?.(user) },
-        );
+        legal.request((acceptedDocuments) => {
+          const extension =
+            typeof extraPayload === "function" ? extraPayload() : extraPayload;
+          mutation.mutate(
+            {
+              username,
+              password,
+              extraPayload: {
+                ...extension,
+                ...buildAuthLegalPayload(legalConsent, acceptedDocuments),
+              },
+            },
+            { onSuccess: ({ user }) => onSuccess?.(user) },
+          );
+        });
       }}
     >
       <Flex col g="3">
-        <OAuthButtons
-          providers={methods?.allowed_oauth_providers ?? []}
-          clientIds={methods?.oauth_client_ids ?? {}}
-          next={next}
-          {...oauthButtons}
-        />
+        {oauthPlacement === "before-fields" ? oauthBlock : null}
         <AuthFormError error={mutation.error} fallback={copy.common.error} />
         <AuthField label={copy.login.username}>
           <AuthTextField
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             autoComplete="username"
+            disabled={disabled}
           />
         </AuthField>
         <AuthField label={copy.common.password}>
@@ -62,17 +93,21 @@ export function LoginForm<TUser extends AuthUser = AuthUser>({
             onChange={(e) => setPassword(e.target.value)}
             type="password"
             autoComplete="current-password"
+            disabled={disabled}
           />
         </AuthField>
         <Button
           type="submit"
           size={3}
           disabled={
-            mutation.isPending || methods?.email_password_allowed === false
+            disabled ||
+            mutation.isPending ||
+            methods?.email_password_allowed === false
           }
         >
           {mutation.isPending ? copy.login.submitting : copy.login.submit}
         </Button>
+        {oauthPlacement === "after-submit" ? oauthBlock : null}
         {forgotPasswordHref ? (
           <Link href={forgotPasswordHref} fs={14}>
             {copy.login.forgot}
@@ -83,7 +118,9 @@ export function LoginForm<TUser extends AuthUser = AuthUser>({
             {copy.login.register}
           </Link>
         ) : null}
+        {oauthPlacement === "after-links" ? oauthBlock : null}
       </Flex>
+      {legal.dialog}
     </form>
   );
 }

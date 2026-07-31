@@ -54,12 +54,17 @@ export function useLogin<
 >(): UseMutationResult<
   { user: TUser },
   Error,
-  { username: string; password: string }
+  {
+    username: string;
+    password: string;
+    extraPayload?: Record<string, unknown>;
+  }
 > {
   const client = useAuthClient<TUser>();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ username, password }) => client.login(username, password),
+    mutationFn: ({ username, password, extraPayload }) =>
+      client.login(username, password, extraPayload),
     onSuccess: ({ user }) => {
       queryClient.setQueryData(AUTH_USER_QUERY_KEY, user);
     },

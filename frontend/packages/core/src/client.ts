@@ -57,19 +57,20 @@ export class AuthClient<TUser extends AuthUser = AuthUser> {
   constructor(options: AuthClientOptions) {
     this.routes = options.routes;
     this.fetcher = options.fetch ?? globalThis.fetch.bind(globalThis);
-    this.logging = options.logging !== undefined && options.logging !== false
-      ? resolveLogOptions({
-          ...(typeof options.logging === "object" ? options.logging : {}),
-          enabled:
-            typeof options.logging === "object"
-              ? (options.logging.enabled ?? true)
-              : true,
-          label:
-            typeof options.logging === "object"
-              ? (options.logging.label ?? "AUTH")
-              : "AUTH",
-        })
-      : null;
+    this.logging =
+      options.logging !== undefined && options.logging !== false
+        ? resolveLogOptions({
+            ...(typeof options.logging === "object" ? options.logging : {}),
+            enabled:
+              typeof options.logging === "object"
+                ? (options.logging.enabled ?? true)
+                : true,
+            label:
+              typeof options.logging === "object"
+                ? (options.logging.label ?? "AUTH")
+                : "AUTH",
+          })
+        : null;
     this.session = new AuthSessionManager({
       execute: (input, init) => this.fetch(requestUrl(input), init ?? {}),
       refresh: () =>
@@ -99,10 +100,14 @@ export class AuthClient<TUser extends AuthUser = AuthUser> {
     return this.request(this.routes.me, { method: "GET" });
   }
 
-  login(username: string, password: string): Promise<{ user: TUser }> {
+  login(
+    username: string,
+    password: string,
+    extraPayload?: Record<string, unknown>,
+  ): Promise<{ user: TUser }> {
     return this.request(this.routes.login, {
       method: "POST",
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ ...extraPayload, username, password }),
     });
   }
 
@@ -160,10 +165,7 @@ export class AuthClient<TUser extends AuthUser = AuthUser> {
     });
   }
 
-  private async request<T>(
-    url: string,
-    init: RequestInit,
-  ): Promise<T> {
+  private async request<T>(url: string, init: RequestInit): Promise<T> {
     const headers = new Headers(init.headers);
     if (!headers.has("Content-Type")) {
       headers.set("Content-Type", "application/json");
@@ -361,7 +363,8 @@ function normalizeRequestBody(body: BodyInit | null | undefined): unknown {
 }
 
 function nowMs(): number {
-  return typeof performance !== "undefined" && typeof performance.now === "function"
+  return typeof performance !== "undefined" &&
+    typeof performance.now === "function"
     ? performance.now()
     : Date.now();
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## Next
+
+- Added controlled OAuth placement before fields, after submit, or after navigation links.
+- Added a reusable versioned legal-consent gate shared by login, registration and OAuth.
+- Added login metadata payloads and OAuth callback payload transfer for server-side acceptance audit.
+
 ## 0.3.1 - Unreleased
 
 - Added semantic accent-hover links to the ready auth forms.
