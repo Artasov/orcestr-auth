@@ -1,6 +1,6 @@
 {
   "name": "@orcestr/auth-forms",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Ready authentication forms built with @orcestr/ui, without pages or routing ownership.",
   "author": "Artasov",
   "license": "MPL-2.0",
@@ -44,7 +44,7 @@
     "@orcestr/core": "0.1.0"
   },
   "peerDependencies": {
-    "@orcestr/ui": "^0.3.6",
+    "@orcestr/ui": "^0.3.6 || ^0.4.0",
     "@tanstack/react-query": "^5.99.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
