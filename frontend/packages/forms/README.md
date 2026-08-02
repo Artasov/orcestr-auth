@@ -14,7 +14,7 @@ The package exports forms, not pages, routes, metadata or product branding.
 
 ```bash
 npm install @orcestr/auth-core @orcestr/auth-react @orcestr/auth-forms
-npm install @orcestr/ui @tanstack/react-query react react-dom
+npm install @orcestr/ui @tanstack/react-query react react-dom react-icons
 ```
 
 ## Forms
@@ -37,12 +37,16 @@ import { AuthI18nProvider, LoginForm } from "@orcestr/auth-forms";
 
 <AuthI18nProvider locale="en">
   <LoginForm
-    next="/deliveries/overview"
-    registerHref="/register?next=%2Fdeliveries%2Foverview"
-    onSuccess={(user) => router.replace("/deliveries/overview")}
+    next="/dashboard"
+    registerHref="/register?next=%2Fdashboard"
+    onSuccess={(user) => router.replace("/dashboard")}
   />
 </AuthI18nProvider>;
 ```
+
+Messages are resolved from stable API error codes such as `invalid_credentials`, not from the
+server's English fallback text. Locale changes therefore apply to validation and request errors
+as well as labels.
 
 Forms expose callbacks, links, slots and product extensions such as registration
 `extraPayload` and `legalContent`. The consumer composes pages from semantic HTML and existing

@@ -13,7 +13,7 @@
 ## Установка
 
 ```bash
-npm install @orcestr/auth-core
+npm install @orcestr/core @orcestr/auth-core
 ```
 
 ## Что входит
@@ -57,5 +57,27 @@ const next = safeRedirectPath(searchParams.get('next'), '/overview');
 включая пароли и токены, автоматически скрываются.
 
 Навигация и product-specific fallback targets остаются в приложении.
+
+## Ошибки
+
+При неуспешном запросе `AuthClient` выбрасывает `ApiError` из `@orcestr/core`. Для поведения и
+локализации используй стабильные auth-коды:
+
+```ts
+import { isApiError } from '@orcestr/core';
+import { AUTH_ERROR_CODES } from '@orcestr/auth-core';
+
+try {
+    await auth.login(username, password);
+} catch (error) {
+    if (isApiError(error) && error.code === AUTH_ERROR_CODES.invalidCredentials) {
+        showLoginError('Неверный email, логин или пароль.');
+    }
+}
+```
+
+Готовые формы уже содержат английский и русский auth catalog. Headless consumers должны
+передать собственный catalog и использовать серверный `message` только как безопасный
+диагностический fallback.
 
 Репозиторий и полная архитектура: [Orcestr Auth](https://github.com/Artasov/orcestr-auth).

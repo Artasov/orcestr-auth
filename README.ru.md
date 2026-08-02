@@ -25,7 +25,7 @@ Orcestr Auth задаёт единый проверенный контракт �
 
 | Пункт | Значение |
 | --- | --- |
-| Версия | `0.2.0` |
+| Версия | пакеты версионируются независимо; актуальные версии указаны в PyPI и npm badges |
 | Статус | Beta |
 | Backend | Python 3.12+, FastAPI, SQLAlchemy 2 |
 | Frontend | React 19, React Query 5, Next.js 16 |
@@ -83,10 +83,10 @@ pip install "orcestr-auth[all]"
 Frontend разделён на слои, поэтому приложение устанавливает только нужные пакеты:
 
 ```bash
-npm install @orcestr/auth-core
-npm install @orcestr/auth-react @tanstack/react-query
-npm install @orcestr/auth-forms @orcestr/ui
-npm install @orcestr/auth-next
+npm install @orcestr/core @orcestr/auth-core
+npm install @orcestr/auth-react @tanstack/react-query react
+npm install @orcestr/auth-forms @orcestr/ui @tanstack/react-query react react-dom react-icons
+npm install @orcestr/auth-next next
 ```
 
 Подключение и примеры описаны в README каждого пакета.
@@ -112,9 +112,13 @@ orcestr-auth (Python)
 - [Оглавление документации](./docs/README.ru.md)
 - [Архитектурные границы](./docs/architecture/boundaries.ru.md)
 - [Инварианты безопасности](./docs/security/invariants.ru.md)
-- [Подключение к Orcestr](./docs/integration/orcestr.ru.md)
+- [Подключение к приложению](./docs/integration/application.ru.md)
 - [Инструкция по релизу](./docs/RELEASE.ru.md)
-- [План реализации и принятые решения](./PLAN.md)
+
+Все backend- и browser-ошибки используют строгий envelope Orcestr Core. Auth владеет
+стабильными кодами вроде `invalid_credentials`, а Core — transport, parsing, request IDs и
+framework handlers. Приложение локализует сообщения по коду и не должно строить логику на
+человекочитаемом `message`.
 
 ## Разработка
 
@@ -149,6 +153,7 @@ Trusted Publishing/provenance.
 ## Экосистема Orcestr
 
 - Продукт и документация: [orcestr.com](https://orcestr.com)
+- Общие API-контракты: [Orcestr Core](https://github.com/Artasov/orcestr-core)
 - UI-система: [`@orcestr/ui`](https://github.com/Artasov/orcestr-ui)
 
 ## Maintainer

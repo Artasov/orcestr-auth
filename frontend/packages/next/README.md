@@ -26,7 +26,7 @@ export function proxy(request: NextRequest) {
         accessCookieName: 'orcestr_access',
         refreshCookieName: 'orcestr_refresh',
         loginPath: '/login',
-        isProtectedPath: (pathname) => pathname.startsWith('/deliveries/'),
+        isProtectedPath: (pathname) => pathname.startsWith('/dashboard/'),
     });
 }
 ```

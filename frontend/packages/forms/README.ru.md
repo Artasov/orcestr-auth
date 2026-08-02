@@ -14,7 +14,7 @@
 
 ```bash
 npm install @orcestr/auth-core @orcestr/auth-react @orcestr/auth-forms
-npm install @orcestr/ui @tanstack/react-query react react-dom
+npm install @orcestr/ui @tanstack/react-query react react-dom react-icons
 ```
 
 ## Формы
@@ -37,12 +37,16 @@ import { AuthI18nProvider, LoginForm } from "@orcestr/auth-forms";
 
 <AuthI18nProvider locale="ru">
   <LoginForm
-    next="/deliveries/overview"
-    registerHref="/register?next=%2Fdeliveries%2Foverview"
-    onSuccess={(user) => router.replace("/deliveries/overview")}
+    next="/dashboard"
+    registerHref="/register?next=%2Fdashboard"
+    onSuccess={(user) => router.replace("/dashboard")}
   />
 </AuthI18nProvider>;
 ```
+
+Сообщения выбираются по стабильным API error codes вроде `invalid_credentials`, а не по
+английскому fallback-тексту сервера. Поэтому смена locale применяется и к validation/request
+errors, и к подписям формы.
 
 Формы принимают callbacks, ссылки, slots и product extensions, включая registration
 `extraPayload` и `legalContent`. Consumer собирает страницы из семантического HTML и

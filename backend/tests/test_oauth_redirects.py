@@ -19,7 +19,7 @@ def request(base_host: str = "api.example.com") -> Request:
 
 def test_callback_policy_accepts_configured_subdomains() -> None:
     policy = OAuthRedirectPolicy(allowed_domains=("example.com",))
-    callback = "https://beauty.example.com/auth/oauth/github/callback"
+    callback = "https://account.example.com/auth/oauth/github/callback"
     policy.validate_callback_uri(request(), "github", callback)
 
 

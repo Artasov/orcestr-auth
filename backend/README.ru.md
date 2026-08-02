@@ -93,6 +93,22 @@ router = create_auth_router(
 )
 ```
 
+Auth services выбрасывают общий `orcestr_core.ApiError`. Один раз зарегистрируй в приложении
+middleware и handlers из Core, затем подключи auth router:
+
+```python
+from fastapi import FastAPI
+from orcestr_core.fastapi import RequestIdMiddleware, register_api_error_handlers
+
+app = FastAPI()
+app.add_middleware(RequestIdMiddleware)
+register_api_error_handlers(app)
+app.include_router(router)
+```
+
+Так стабильные auth-коды вроде `invalid_credentials`, структурированные validation fields и
+`x-request-id` используют тот же envelope, что и остальной product API.
+
 Consumer реализует небольшой интерфейс `AuthHttpApplication` для product-specific операций:
 создания пользователя, legal acceptance, tenant bootstrap, отправки писем, аудита и rate
 limits. Стандартные endpoints, cookies и token responses остаются в библиотеке.
@@ -121,6 +137,7 @@ uv build
 ## Экосистема
 
 - Все auth-пакеты: [репозиторий Orcestr Auth](https://github.com/Artasov/orcestr-auth)
+- Общие API-контракты: [Orcestr Core](https://github.com/Artasov/orcestr-core)
 - UI-система: [`@orcestr/ui`](https://github.com/Artasov/orcestr-ui)
 - Продукт: [orcestr.com](https://orcestr.com)
 

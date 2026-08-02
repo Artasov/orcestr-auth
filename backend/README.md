@@ -93,6 +93,22 @@ router = create_auth_router(
 )
 ```
 
+Auth services raise the shared `orcestr_core.ApiError`. Register the Core middleware and
+handlers once on the application, then include the auth router:
+
+```python
+from fastapi import FastAPI
+from orcestr_core.fastapi import RequestIdMiddleware, register_api_error_handlers
+
+app = FastAPI()
+app.add_middleware(RequestIdMiddleware)
+register_api_error_handlers(app)
+app.include_router(router)
+```
+
+This preserves stable auth codes such as `invalid_credentials`, structured validation fields
+and `x-request-id` in the same envelope as the rest of the product API.
+
 The consumer implements the small `AuthHttpApplication` boundary for product-specific work:
 user creation, legal acceptance, tenant bootstrap, email delivery, audit and rate limits.
 Standard endpoints, cookies and token responses remain library-owned.
@@ -121,6 +137,7 @@ uv build
 ## Ecosystem
 
 - All auth packages: [Orcestr Auth repository](https://github.com/Artasov/orcestr-auth)
+- Shared API contracts: [Orcestr Core](https://github.com/Artasov/orcestr-core)
 - UI system: [`@orcestr/ui`](https://github.com/Artasov/orcestr-ui)
 - Product: [orcestr.com](https://orcestr.com)
 
