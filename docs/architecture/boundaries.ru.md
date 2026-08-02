@@ -6,7 +6,8 @@
 
 Orcestr Auth — монорепозиторий, потому что Python- и frontend-пакеты реализуют единый HTTP- и
 security-контракт и должны проверяться вместе. При этом каждый artifact устанавливается
-отдельно и имеет собственный package README.
+отдельно и имеет собственный package README в
+[индексе пакетов](../../README.ru.md#пакеты).
 
 ## Ownership
 
@@ -49,7 +50,16 @@ endpoints и безопасным форматом browser/token responses.
                   \-> @orcestr/auth-next
 ```
 
+- [`@orcestr/auth-core`](../../frontend/packages/core/README.ru.md) — browser
+  client и слой session/refresh;
+- [`@orcestr/auth-react`](../../frontend/packages/react/README.ru.md) — headless
+  React Query state и hooks;
+- [`@orcestr/auth-forms`](../../frontend/packages/forms/README.ru.md) — готовые
+  формы на [Orcestr UI](https://github.com/Artasov/orcestr-ui);
+- [`@orcestr/auth-next`](../../frontend/packages/next/README.ru.md) — Next.js
+  guards и безопасные server redirects.
+
 `auth-core` не зависит от framework. React- и Next.js-адаптеры зависят от core, но не друг от
-друга. Формы используют headless React hooks и UI kit, но не владеют страницами. Consumer
-собирает простые страницы из семантического HTML и существующих UI primitives; route files
-остаются в приложении.
+друга. Формы используют headless React hooks и UI kit, но не владеют страницами.
+«Consumer-приложение» означает продукт, который подключает эти пакеты: он собирает страницы из
+семантического HTML и существующих UI primitives, а route files остаются в этом приложении.

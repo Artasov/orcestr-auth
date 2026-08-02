@@ -13,7 +13,7 @@ React, UI-kit or Next.js dependency.
 ## Install
 
 ```bash
-npm install @orcestr/auth-core
+npm install @orcestr/core @orcestr/auth-core
 ```
 
 ## Includes
@@ -57,5 +57,26 @@ const next = safeRedirectPath(searchParams.get('next'), '/overview');
 passwords and tokens are redacted automatically.
 
 Applications own navigation and product-specific fallback targets.
+
+## Errors
+
+`AuthClient` rejects failed requests with `ApiError` from `@orcestr/core`. Use stable auth codes
+for behavior and localization:
+
+```ts
+import { isApiError } from '@orcestr/core';
+import { AUTH_ERROR_CODES } from '@orcestr/auth-core';
+
+try {
+    await auth.login(username, password);
+} catch (error) {
+    if (isApiError(error) && error.code === AUTH_ERROR_CODES.invalidCredentials) {
+        showLoginError('Invalid email, username or password.');
+    }
+}
+```
+
+Ready forms already map the auth catalog for English and Russian. Headless consumers should
+provide their own catalog and treat the server `message` only as a safe diagnostic fallback.
 
 Repository and complete architecture: [Orcestr Auth](https://github.com/Artasov/orcestr-auth).

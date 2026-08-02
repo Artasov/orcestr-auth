@@ -24,7 +24,7 @@ keep ownership of users, pages, branding, legal acceptance, tenants and permissi
 
 | Item | Value |
 | --- | --- |
-| Version | `0.2.0` |
+| Version | independently versioned; see the PyPI and npm badges |
 | Status | Beta |
 | Backend | Python 3.12+, FastAPI, SQLAlchemy 2 |
 | Frontend | React 19, React Query 5, Next.js 16 |
@@ -82,10 +82,10 @@ pip install "orcestr-auth[all]"
 Frontend packages are intentionally layered, so applications install only what they use:
 
 ```bash
-npm install @orcestr/auth-core
-npm install @orcestr/auth-react @tanstack/react-query
-npm install @orcestr/auth-forms @orcestr/ui
-npm install @orcestr/auth-next
+npm install @orcestr/core @orcestr/auth-core
+npm install @orcestr/auth-react @tanstack/react-query react
+npm install @orcestr/auth-forms @orcestr/ui @tanstack/react-query react react-dom react-icons
+npm install @orcestr/auth-next next
 ```
 
 See each package README for wiring and examples.
@@ -111,9 +111,12 @@ Detailed documentation:
 - [Documentation index](./docs/README.md)
 - [Architecture boundaries](./docs/architecture/boundaries.md)
 - [Security invariants](./docs/security/invariants.md)
-- [Orcestr integration](./docs/integration/orcestr.md)
+- [Application integration](./docs/integration/application.md)
 - [Release guide](./docs/RELEASE.md)
-- [Implementation plan and decisions](./PLAN.md)
+
+All backend and browser failures use the strict Orcestr Core error envelope. Auth owns stable
+codes such as `invalid_credentials`; Core owns transport, parsing, request IDs and framework
+handlers. Applications localize by code and must not branch on human-readable messages.
 
 ## Development
 
@@ -148,6 +151,7 @@ Full instructions: [docs/RELEASE.md](./docs/RELEASE.md).
 ## Orcestr Ecosystem
 
 - Product and documentation: [orcestr.com](https://orcestr.com)
+- Shared API contracts: [Orcestr Core](https://github.com/Artasov/orcestr-core)
 - UI system: [`@orcestr/ui`](https://github.com/Artasov/orcestr-ui)
 
 ## Maintainer

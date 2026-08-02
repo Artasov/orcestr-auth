@@ -26,8 +26,8 @@ const routes = {
 
 test("safe redirect accepts internal targets and rejects external redirects", () => {
   assert.equal(
-    safeRedirectPath("/deliveries/overview?tab=1"),
-    "/deliveries/overview?tab=1",
+    safeRedirectPath("/dashboard/overview?tab=1"),
+    "/dashboard/overview?tab=1",
   );
   assert.equal(safeRedirectPath("https://evil.test", "/overview"), "/overview");
   assert.equal(safeRedirectPath("//evil.test", "/overview"), "/overview");
@@ -41,8 +41,8 @@ test("safe redirect accepts internal targets and rejects external redirects", ()
 
 test("auth paths preserve a safe next target", () => {
   assert.equal(
-    authPathWithNext("/login", "/deliveries/overview"),
-    "/login?next=%2Fdeliveries%2Foverview",
+    authPathWithNext("/login", "/dashboard/overview"),
+    "/login?next=%2Fdashboard%2Foverview",
   );
 });
 

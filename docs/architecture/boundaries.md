@@ -6,7 +6,8 @@
 
 Orcestr Auth is one monorepository because its Python and frontend packages implement one HTTP
 and security contract and must be verified together. Each artifact is still independently
-installable and has its own package README.
+installable and has its own package README in the
+[package index](../../README.md#packages).
 
 ## Ownership
 
@@ -48,6 +49,16 @@ the endpoint matrix and safe browser/token response behavior.
                   \-> @orcestr/auth-next
 ```
 
+- [`@orcestr/auth-core`](../../frontend/packages/core/README.md) is the browser
+  client and session/refresh layer;
+- [`@orcestr/auth-react`](../../frontend/packages/react/README.md) provides
+  headless React Query state and hooks;
+- [`@orcestr/auth-forms`](../../frontend/packages/forms/README.md) renders ready
+  forms with [Orcestr UI](https://github.com/Artasov/orcestr-ui);
+- [`@orcestr/auth-next`](../../frontend/packages/next/README.md) provides Next.js
+  guards and safe server redirects.
+
 `auth-core` is framework-independent. React and Next.js adapters depend on it, but not on each
-other. Forms use the headless React hooks and UI kit. Forms never own pages. Consumers compose
-simple pages from semantic HTML and existing UI primitives; route files stay in the application.
+other. Forms use the headless React hooks and UI kit. Forms never own pages. “Consumer
+application” means the product integrating these packages; it composes pages from semantic HTML
+and existing UI primitives, and its route files stay in that application.
