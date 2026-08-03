@@ -2,6 +2,13 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
+import {
+  createAuthLegalConsentStorageRecord,
+  hasCurrentRequiredAuthLegalConsent,
+  parseAuthLegalConsentStorage,
+  restoreAcceptedAuthLegalDocuments,
+} from "../packages/forms/dist/legalConsentStorage.js";
+
 const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 
 test("auth navigation uses the semantic Orcestr UI Link", () => {
@@ -47,9 +54,57 @@ test("login, registration and OAuth share the versioned legal consent gate", () 
   assert.match(legal, /acceptance: Record<string, unknown>/);
   assert.match(legal, /selectedDocumentIds/);
   assert.match(legal, /requiredAccepted/);
+  assert.match(legal, /selectAllOnFirstDocumentCheck\?: boolean/);
+  assert.match(legal, /documentId === documents\[0\]\?\.id/);
+  assert.match(legal, /readAuthLegalConsentStorage/);
+  assert.match(legal, /writeAuthLegalConsentStorage/);
   assert.match(oauth, /callbackPayload/);
   assert.match(login, /legal\.request/);
   assert.match(login, /buildAuthLegalPayload/);
   assert.match(register, /legal\.request/);
   assert.match(register, /buildAuthLegalPayload/);
+});
+
+test("legal consent storage restores only matching document versions", () => {
+  const documents = [
+    { id: "terms", version: "2", required: true },
+    { id: "privacy", version: "4", required: true },
+    { id: "marketing", version: "1", required: false },
+  ];
+  const record = createAuthLegalConsentStorageRecord(documents.slice(0, 2));
+
+  assert.equal(hasCurrentRequiredAuthLegalConsent(documents, record), true);
+  assert.deepEqual(
+    restoreAcceptedAuthLegalDocuments(documents, record).map(({ id }) => id),
+    ["terms", "privacy"],
+  );
+  assert.equal(
+    hasCurrentRequiredAuthLegalConsent(
+      documents.map((document) =>
+        document.id === "privacy" ? { ...document, version: "5" } : document,
+      ),
+      record,
+    ),
+    false,
+  );
+});
+
+test("legal consent storage rejects malformed or unsupported records", () => {
+  assert.equal(parseAuthLegalConsentStorage(null), null);
+  assert.equal(parseAuthLegalConsentStorage("not-json"), null);
+  assert.equal(
+    parseAuthLegalConsentStorage(
+      JSON.stringify({ schemaVersion: 2, acceptedDocuments: [] }),
+    ),
+    null,
+  );
+  assert.equal(
+    parseAuthLegalConsentStorage(
+      JSON.stringify({
+        schemaVersion: 1,
+        acceptedDocuments: [{ id: "terms" }],
+      }),
+    ),
+    null,
+  );
 });

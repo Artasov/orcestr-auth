@@ -100,6 +100,8 @@ through the OAuth callback state.
 ```tsx
 <LoginForm
   legalConsent={{
+    selectAllOnFirstDocumentCheck: true,
+    storage: { key: "my-product:auth-legal-consent" },
     documents: legalDocuments.map((document) => ({
       id: document.slug,
       title: document.title,
@@ -117,4 +119,20 @@ through the OAuth callback state.
 ```
 
 Set `enabled: false` to disable the gate. Use `payloadKey` or `buildPayload` when the backend uses
-a different acceptance contract. Any number of legal documents is supported.
+a different acceptance contract. Any number of required or optional legal documents is supported.
+
+`selectAllOnFirstDocumentCheck: true` makes the first document checkbox act as a compact
+select-all control: checking it selects every document and clearing it clears the selection. Leave
+the option unset when each consent must be chosen independently.
+
+Accepted `id` and `version` pairs are cached in the browser's `localStorage` by default. When every
+current required document has a matching cached version, the modal is skipped and the current
+documents are still included in the login, registration or OAuth payload. A new required document
+or a changed required version opens the modal again; matching prior selections are restored.
+Optional-document changes do not force the gate to reopen.
+
+Use `storage: { key: "your-product:legal-consent" }` to isolate multiple policies on one origin, or
+`storage: false` to disable browser persistence. The default key is
+`@orcestr/auth-forms:legal-consent`. The cache is a user-experience optimization, not a legal audit
+record or security boundary: the backend must continue to validate and persist accepted document
+versions from the submitted payload.

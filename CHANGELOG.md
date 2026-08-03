@@ -2,6 +2,7 @@
 
 ## Next
 
+- Added version-aware local legal-consent persistence and optional first-checkbox select-all behavior.
 - Added controlled OAuth placement before fields, after submit, or after navigation links.
 - Added a reusable versioned legal-consent gate shared by login, registration and OAuth.
 - Added login metadata payloads and OAuth callback payload transfer for server-side acceptance audit.
