@@ -4,6 +4,14 @@ import { Button, Checkbox, Flex, Link, Modal, Text } from "@orcestr/ui";
 import { useCallback, useId, useRef, useState, type ReactNode } from "react";
 
 import { useAuthMessages } from "./i18n.js";
+import {
+  createAuthLegalConsentStorageRecord,
+  hasCurrentRequiredAuthLegalConsent,
+  readAuthLegalConsentStorage,
+  restoreAcceptedAuthLegalDocuments,
+  type AuthLegalConsentStorageOptions,
+  writeAuthLegalConsentStorage,
+} from "./legalConsentStorage.js";
 
 export type AuthLegalDocument = {
   id: string;
@@ -22,6 +30,8 @@ export type AuthLegalConsentOptions = {
   description?: ReactNode;
   confirmLabel?: ReactNode;
   cancelLabel?: ReactNode;
+  selectAllOnFirstDocumentCheck?: boolean;
+  storage?: false | AuthLegalConsentStorageOptions;
   payloadKey?: string;
   buildPayload?: (
     documents: readonly AuthLegalDocument[],
@@ -69,11 +79,22 @@ export function useAuthLegalConsent(options?: AuthLegalConsentOptions) {
         void action([]);
         return;
       }
+      const storedConsent = readAuthLegalConsentStorage(options?.storage);
+      const restoredDocuments = restoreAcceptedAuthLegalDocuments(
+        documents,
+        storedConsent,
+      );
+      if (hasCurrentRequiredAuthLegalConsent(documents, storedConsent)) {
+        void action(restoredDocuments);
+        return;
+      }
       pendingAction.current = action;
-      setSelectedDocumentIds(new Set());
+      setSelectedDocumentIds(
+        new Set(restoredDocuments.map((document) => document.id)),
+      );
       setOpen(true);
     },
-    [enabled],
+    [documents, enabled, options?.storage],
   );
 
   const onOpenChange = useCallback((nextOpen: boolean) => {
@@ -84,13 +105,21 @@ export function useAuthLegalConsent(options?: AuthLegalConsentOptions) {
   const onDocumentChange = useCallback(
     (documentId: string, checked: boolean) => {
       setSelectedDocumentIds((current) => {
+        if (
+          options?.selectAllOnFirstDocumentCheck &&
+          documentId === documents[0]?.id
+        ) {
+          return checked
+            ? new Set(documents.map((document) => document.id))
+            : new Set();
+        }
         const next = new Set(current);
         if (checked) next.add(documentId);
         else next.delete(documentId);
         return next;
       });
     },
-    [],
+    [documents, options?.selectAllOnFirstDocumentCheck],
   );
 
   const onConfirm = useCallback(() => {
@@ -99,10 +128,14 @@ export function useAuthLegalConsent(options?: AuthLegalConsentOptions) {
     const acceptedDocuments = documents.filter((document) =>
       selectedDocumentIds.has(document.id),
     );
+    writeAuthLegalConsentStorage(
+      options?.storage,
+      createAuthLegalConsentStorageRecord(acceptedDocuments),
+    );
     pendingAction.current = null;
     setOpen(false);
     void action(acceptedDocuments);
-  }, [documents, selectedDocumentIds]);
+  }, [documents, options?.storage, selectedDocumentIds]);
 
   return {
     request,
