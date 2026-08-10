@@ -52,25 +52,31 @@ def create_auth_dependencies(
             if credentials is not None
             else request.cookies.get(config.cookie.access_name)
         )
+        refresh_cookie = request.cookies.get(config.cookie.refresh_name)
         if credentials is None and token:
             _require_cookie_csrf(request)
         if not token:
-            if required:
+            if required or refresh_cookie:
                 raise auth_api_error(
                     status_code=status.HTTP_401_UNAUTHORIZED,
-                    code=AuthErrorCode.NOT_AUTHENTICATED,
+                    code=(
+                        AuthErrorCode.SESSION_EXPIRED
+                        if refresh_cookie
+                        else AuthErrorCode.NOT_AUTHENTICATED
+                    ),
                 )
             return None
         try:
             payload = codec.decode(token, "access")
+            user_id = _coerce_id(
+                payload["sub"],
+                user_fields.id.property.columns[0].type,
+            )
         except TokenPayloadError as exc:
-            if required:
-                raise auth_api_error(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    code=AuthErrorCode.SESSION_INVALID,
-                ) from exc
-            return None
-        user_id = _coerce_id(payload["sub"], user_fields.id.property.columns[0].type)
+            raise auth_api_error(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                code=AuthErrorCode.SESSION_INVALID,
+            ) from exc
         session_id = payload.get("sid")
         if session_id:
             auth_session = await session.get(models.session, str(session_id))
@@ -80,21 +86,17 @@ def create_auth_dependencies(
                 or auth_session.revoked_at is not None
                 or _aware(auth_session.expires_at) <= datetime.now(UTC)
             ):
-                if required:
-                    raise auth_api_error(
-                        status_code=status.HTTP_401_UNAUTHORIZED,
-                        code=AuthErrorCode.SESSION_EXPIRED,
-                    )
-                return None
+                raise auth_api_error(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    code=AuthErrorCode.SESSION_EXPIRED,
+                )
         users = SqlAlchemyUserRepository(session, user_model, user_fields)
         user = await users.get_by_id(user_id)
         if user is None or not users.is_active(user):
-            if required:
-                raise auth_api_error(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    code=AuthErrorCode.SESSION_INVALID,
-                )
-            return None
+            raise auth_api_error(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                code=AuthErrorCode.SESSION_INVALID,
+            )
         return user
 
     async def current_user(

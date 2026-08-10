@@ -9,6 +9,8 @@
 
 ## 0.3.1 - Unreleased
 
+- Fixed optional authentication so an expired or invalid browser session
+  returns `401` and can be refreshed instead of silently becoming anonymous.
 - Added semantic accent-hover links to the ready auth forms.
 - Added reusable and provider-specific OAuth button components with configurable layout.
 
