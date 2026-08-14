@@ -2,6 +2,7 @@
 
 ## Next
 
+- Updated `@orcestr/auth-forms` for the `@orcestr/ui` 0.7 component contract.
 - Added version-aware local legal-consent persistence and optional first-checkbox select-all behavior.
 - Added controlled OAuth placement before fields, after submit, or after navigation links.
 - Added a reusable versioned legal-consent gate shared by login, registration and OAuth.
