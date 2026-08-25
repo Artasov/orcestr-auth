@@ -10,7 +10,8 @@
     "clean": "node scripts/clean.mjs",
     "build": "npm run clean && tsc -b",
     "typecheck": "tsc -b --pretty false",
-    "test": "npm run build && node --test tests/*.test.mjs",
+    "test": "npm run build && npm run test:types && node --test tests/*.test.mjs",
+    "test:types": "tsc -p tests/tsconfig.json --pretty false",
     "pack:dry-run": "npm pack --dry-run --workspace @orcestr/auth-core && npm pack --dry-run --workspace @orcestr/auth-react && npm pack --dry-run --workspace @orcestr/auth-forms && npm pack --dry-run --workspace @orcestr/auth-next"
   },
   "devDependencies": {

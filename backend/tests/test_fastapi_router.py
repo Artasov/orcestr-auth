@@ -166,6 +166,32 @@ async def test_explicit_token_flow_and_openapi_contract() -> None:
         assert token_refresh.json()["refresh_token"] == "next-refresh"
         assert application.refresh_tokens == ["mobile-refresh"]
 
+        token_logout = await client.post(
+            "/auth/token/logout/",
+            headers={"authorization": "Bearer mobile-access"},
+            json={"refresh_token": "mobile-refresh"},
+        )
+        assert token_logout.status_code == 204
+        assert token_logout.headers["cache-control"] == "no-store"
+        assert not token_logout.headers.get_list("set-cookie")
+        assert application.logout_tokens == [("mobile-access", "mobile-refresh")]
+
+        refresh_only_logout = await client.post(
+            "/auth/token/logout/",
+            json={"refresh_token": "second-mobile-refresh"},
+        )
+        assert refresh_only_logout.status_code == 204
+        assert application.logout_tokens[-1] == (None, "second-mobile-refresh")
+
+        malformed_bearer = await client.post(
+            "/auth/token/logout/",
+            headers={"authorization": "Basic credentials"},
+            json={"refresh_token": "must-not-be-used"},
+        )
+        assert malformed_bearer.status_code == 401
+        assert malformed_bearer.json()["error"]["code"] == "session_invalid"
+        assert application.logout_tokens[-1] == (None, "second-mobile-refresh")
+
         schema = (await client.get("/openapi.json")).json()
         register_schema = schema["paths"]["/auth/register/"]["post"][
             "requestBody"
@@ -173,5 +199,15 @@ async def test_explicit_token_flow_and_openapi_contract() -> None:
         token_refresh_schema = schema["paths"]["/auth/token/refresh/"]["post"][
             "requestBody"
         ]["content"]["application/json"]["schema"]
+        token_logout_operation = schema["paths"]["/auth/token/logout/"]["post"]
+        token_logout_schema = token_logout_operation["requestBody"]["content"][
+            "application/json"
+        ]["schema"]
         assert register_schema["$ref"].endswith("/RegisterPayload")
         assert token_refresh_schema["$ref"].endswith("/RefreshTokenInput")
+        assert token_logout_schema["$ref"].endswith("/RefreshTokenInput")
+        assert token_logout_operation["security"] == [{"HTTPBearer": []}, {}]
+        assert (
+            schema["components"]["securitySchemes"]["HTTPBearer"]["scheme"]
+            == "bearer"
+        )

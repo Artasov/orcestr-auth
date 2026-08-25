@@ -38,7 +38,21 @@ test("OAuth provider buttons support shared and provider-specific components", (
   assert.match(buttons, /direction\?: "row" \| "column"/);
   assert.match(buttons, /placement\?: OAuthButtonsPlacement/);
   assert.match(buttons, /"after-submit"/);
+  assert.match(buttons, /export type OAuthAuthorizeHandler/);
+  assert.match(buttons, /authorizeHandler\?: OAuthAuthorizeHandler/);
+  assert.match(buttons, /autoAuthorizeProvider\?: OAuthProvider/);
+  assert.match(
+    buttons,
+    /authorizeHandler\(provider, clientId, next, callbackPayload\)/,
+  );
+  assert.match(buttons, /window\.location\.href = await buildOAuthAuthorizeUrl/);
+  assert.match(buttons, /const autoAuthorizationStarted = useRef\(false\)/);
+  assert.match(buttons, /!visible\.includes\(autoAuthorizeProvider\)/);
+  assert.match(buttons, /autoAuthorizationStarted\.current = true/);
   assert.match(login, /oauthButtons\?: OAuthButtonsOptions/);
+  assert.match(login, /oauthLegalConsent = true/);
+  assert.match(login, /oauthLegalConsent\?: boolean/);
+  assert.match(login, /oauthLegalConsent[\s\S]*legal\.request/);
   assert.match(register, /oauthButtons\?: OAuthButtonsOptions/);
 });
 

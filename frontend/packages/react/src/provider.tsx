@@ -1,6 +1,10 @@
 "use client";
 
-import type { AuthClient, AuthUser } from "@orcestr/auth-core";
+import type {
+  AuthClient,
+  AuthClientContract,
+  AuthUser,
+} from "@orcestr/auth-core";
 import {
   useMutation,
   useQuery,
@@ -12,7 +16,7 @@ import { createContext, useContext, type ReactNode } from "react";
 const AUTH_USER_QUERY_KEY = ["orcestr-auth", "current-user"] as const;
 
 type AuthContextValue<TUser extends AuthUser> = {
-  client: AuthClient<TUser>;
+  client: AuthClientContract<TUser>;
 };
 
 const AuthContext = createContext<AuthContextValue<AuthUser> | null>(null);
@@ -21,7 +25,7 @@ export function AuthProvider<TUser extends AuthUser>({
   client,
   children,
 }: {
-  client: AuthClient<TUser>;
+  client: AuthClientContract<TUser>;
   children: ReactNode;
 }) {
   return (
@@ -33,10 +37,11 @@ export function AuthProvider<TUser extends AuthUser>({
 
 export function useAuthClient<
   TUser extends AuthUser = AuthUser,
->(): AuthClient<TUser> {
+  TClient extends AuthClientContract<TUser> = AuthClient<TUser>,
+>(): TClient {
   const value = useContext(AuthContext);
   if (!value) throw new Error("AuthProvider is missing.");
-  return value.client as AuthClient<TUser>;
+  return value.client as TClient;
 }
 
 export function useCurrentUser<TUser extends AuthUser = AuthUser>() {

@@ -2,6 +2,14 @@
 
 ## Next
 
+- Added a structural `AuthClientContract` for browser-compatible native/IPC transports while
+  keeping the existing `AuthClient` and provider OAuth surface directly assignable.
+- Added an optional OAuth button authorization transport, one-shot visible-provider hints and an
+  explicit login option for legal consent handled by an outer OAuth flow; web defaults are unchanged.
+- Added non-cookie `POST /token/logout/` with a required refresh token, optional Bearer access
+  token, no-store response and no cookie CSRF dependency.
+- Prepared patch releases `orcestr-auth` 0.4.1, `@orcestr/auth-core` 0.4.1,
+  `@orcestr/auth-react` 0.4.1 and dependency-aligned `@orcestr/auth-forms` 0.5.1.
 - Added stateless OAuth 2.1 public/native client helpers with secure state,
   PKCE S256, validated callbacks and authorization-code/refresh token grants.
 - Added default-deny client-token isolation, server-session-backed scope guards, an optional

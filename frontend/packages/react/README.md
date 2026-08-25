@@ -34,6 +34,11 @@ export function ProfileAction() {
 }
 ```
 
+`AuthProvider` accepts the structural `AuthClientContract` exported by `@orcestr/auth-core`.
+Existing browser `AuthClient` instances remain directly compatible, while native applications
+can supply an IPC-backed implementation with the same login, registration, recovery and provider
+OAuth surface.
+
 ## Hooks
 
 `useCurrentUser`, `useLogin`, `useRegister`, `useLogout`,

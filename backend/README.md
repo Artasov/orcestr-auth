@@ -113,6 +113,19 @@ The consumer implements the small `AuthHttpApplication` boundary for product-spe
 user creation, legal acceptance, tenant bootstrap, email delivery, audit and rate limits.
 Standard endpoints, cookies and token responses remain library-owned.
 
+## Explicit token sessions
+
+Non-browser first-party clients can use the explicit token endpoints mounted by
+`create_auth_router`: `POST /token/login/`, `POST /token/refresh/` and
+`POST /token/logout/`. Login and refresh return the configured token response and set no cookies.
+Logout accepts the refresh token in the same `RefreshTokenInput` body and an optional access token
+in the `Authorization: Bearer ...` header, passes both values to `AuthHttpApplication.logout`, and
+returns an empty `204` response. Token responses and logout are marked `Cache-Control: no-store`.
+
+This flow does not use cookie CSRF headers. The client is responsible for keeping access tokens in
+memory, persisting refresh tokens in platform-secure storage, and replacing the stored refresh
+token atomically after every successful rotation.
+
 ## OAuth 2.1 public clients
 
 Register native/public clients with exact redirect URI allowlists. Client secrets are not

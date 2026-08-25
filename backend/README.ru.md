@@ -113,6 +113,20 @@ Consumer реализует небольшой интерфейс `AuthHttpAppli
 создания пользователя, legal acceptance, tenant bootstrap, отправки писем, аудита и rate
 limits. Стандартные endpoints, cookies и token responses остаются в библиотеке.
 
+## Явные token sessions
+
+Non-browser first-party clients могут использовать endpoints, которые подключает
+`create_auth_router`: `POST /token/login/`, `POST /token/refresh/` и
+`POST /token/logout/`. Login/refresh возвращают настроенный token response и не устанавливают
+cookies. Logout принимает refresh token в том же теле `RefreshTokenInput` и опциональный access
+token в header `Authorization: Bearer ...`, передаёт оба значения в
+`AuthHttpApplication.logout` и отвечает пустым `204`. Token responses и logout получают
+`Cache-Control: no-store`.
+
+В этом flow не используются cookie CSRF headers. Client обязан держать access token в памяти,
+хранить refresh token в защищённом системном хранилище и атомарно заменять его после каждой
+успешной ротации.
+
 ## OAuth 2.1 для public clients
 
 Native/public clients регистрируются с точным allowlist redirect URI. Client secret не

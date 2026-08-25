@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Protocol
 
 from fastapi import APIRouter, Depends, Request, Response, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 
 from ..config import AuthConfig
@@ -17,6 +18,7 @@ from ..contracts import (
     RefreshTokenInput,
     RegisterInput,
 )
+from ..errors import AuthErrorCode, auth_api_error
 from .cookies import clear_auth_cookies, set_auth_cookies
 
 
@@ -75,6 +77,7 @@ def create_auth_router(
     """Create common auth HTTP routes while leaving product hooks in the app."""
 
     router = APIRouter()
+    optional_bearer = HTTPBearer(auto_error=False)
 
     async def register(
         payload: Any,
@@ -181,6 +184,31 @@ def create_auth_router(
         response_model=token_response_model,
     )
 
+    async def token_logout(
+        payload: Any,
+        request: Request,
+        response: Response,
+        application: AuthHttpApplication = Depends(application_dependency),
+        credentials: HTTPAuthorizationCredentials | None = Depends(optional_bearer),
+    ) -> Response:
+        await application.logout(
+            access_token=_optional_bearer_access_token(request, credentials),
+            refresh_token=payload.refresh_token,
+            request=request,
+        )
+        response.headers["Cache-Control"] = "no-store"
+        response.status_code = status.HTTP_204_NO_CONTENT
+        return response
+
+    token_logout.__annotations__["payload"] = refresh_token_model
+    router.add_api_route(
+        "/token/logout/",
+        token_logout,
+        methods=["POST"],
+        status_code=status.HTTP_204_NO_CONTENT,
+        openapi_extra={"security": [{}]},
+    )
+
     @router.post("/logout/", status_code=status.HTTP_204_NO_CONTENT)
     async def logout(
         request: Request,
@@ -285,12 +313,37 @@ def _require_cookie_csrf(request: Request, config: AuthConfig) -> None:
     ):
         return
     if request.headers.get("x-requested-with", "").lower() != "xmlhttprequest":
-        from ..errors import AuthErrorCode, auth_api_error
-
         raise auth_api_error(
             status_code=status.HTTP_403_FORBIDDEN,
             code=AuthErrorCode.CSRF_HEADER_MISSING,
         )
+
+
+def _optional_bearer_access_token(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials | None,
+) -> str | None:
+    authorization = request.headers.get("authorization")
+    if authorization is None:
+        return None
+    if credentials is None or credentials.scheme.lower() != "bearer":
+        raise _invalid_bearer_token()
+    token = credentials.credentials
+    if (
+        not token
+        or token.strip() != token
+        or any(character.isspace() for character in token)
+    ):
+        raise _invalid_bearer_token()
+    return token
+
+
+def _invalid_bearer_token() -> Exception:
+    return auth_api_error(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        code=AuthErrorCode.SESSION_INVALID,
+        headers={"WWW-Authenticate": "Bearer"},
+    )
 
 
 def _browser_response_model(user_model: Any) -> Any:
