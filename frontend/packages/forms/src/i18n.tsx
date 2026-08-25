@@ -183,6 +183,13 @@ export const authMessages: Record<AuthLocale, AuthMessages> = {
         "The sign-in callback address is not allowed.",
       oauth_email_missing:
         "The sign-in provider did not return a usable email address.",
+      oauth_scope_invalid: "The requested OAuth scope is invalid.",
+      oauth2_client_token_required: "An application access token is required.",
+      oauth2_client_token_not_allowed:
+        "Application access tokens are not accepted by this endpoint.",
+      oauth2_client_token_invalid: "The application access token is invalid.",
+      oauth2_insufficient_scope:
+        "The application access token does not grant the required permission.",
       csrf_header_missing: "The request security check failed.",
     },
   },
@@ -294,6 +301,13 @@ export const authMessages: Record<AuthLocale, AuthMessages> = {
       oauth_origin_not_allowed: "Источник запроса на вход не разрешён.",
       oauth_redirect_uri_not_allowed: "Адрес возврата после входа не разрешён.",
       oauth_email_missing: "Сервис входа не вернул подходящий email.",
+      oauth_scope_invalid: "Запрошенный OAuth scope недействителен.",
+      oauth2_client_token_required: "Требуется токен доступа приложения.",
+      oauth2_client_token_not_allowed:
+        "Этот endpoint не принимает токены доступа приложений.",
+      oauth2_client_token_invalid: "Токен доступа приложения недействителен.",
+      oauth2_insufficient_scope:
+        "Токен доступа приложения не даёт необходимого разрешения.",
       csrf_header_missing: "Не пройдена проверка безопасности запроса.",
     },
   },

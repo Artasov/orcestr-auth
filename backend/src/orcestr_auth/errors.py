@@ -44,6 +44,11 @@ class AuthErrorCode(StrEnum):
     OAUTH_ORIGIN_NOT_ALLOWED = "oauth_origin_not_allowed"
     OAUTH_REDIRECT_URI_NOT_ALLOWED = "oauth_redirect_uri_not_allowed"
     OAUTH_EMAIL_MISSING = "oauth_email_missing"
+    OAUTH_SCOPE_INVALID = "oauth_scope_invalid"
+    OAUTH2_CLIENT_TOKEN_REQUIRED = "oauth2_client_token_required"
+    OAUTH2_CLIENT_TOKEN_NOT_ALLOWED = "oauth2_client_token_not_allowed"
+    OAUTH2_CLIENT_TOKEN_INVALID = "oauth2_client_token_invalid"
+    OAUTH2_INSUFFICIENT_SCOPE = "oauth2_insufficient_scope"
 
 
 AUTH_ERROR_MESSAGES: Mapping[AuthErrorCode, str] = {
@@ -84,6 +89,15 @@ AUTH_ERROR_MESSAGES: Mapping[AuthErrorCode, str] = {
     AuthErrorCode.OAUTH_ORIGIN_NOT_ALLOWED: "The OAuth request origin is not allowed.",
     AuthErrorCode.OAUTH_REDIRECT_URI_NOT_ALLOWED: "The OAuth callback URI is not allowed.",
     AuthErrorCode.OAUTH_EMAIL_MISSING: "The OAuth provider did not return an email address.",
+    AuthErrorCode.OAUTH_SCOPE_INVALID: "The requested OAuth scope is invalid.",
+    AuthErrorCode.OAUTH2_CLIENT_TOKEN_REQUIRED: "An OAuth client bearer token is required.",
+    AuthErrorCode.OAUTH2_CLIENT_TOKEN_NOT_ALLOWED: (
+        "OAuth client tokens are not accepted by this endpoint."
+    ),
+    AuthErrorCode.OAUTH2_CLIENT_TOKEN_INVALID: "The OAuth client token is invalid.",
+    AuthErrorCode.OAUTH2_INSUFFICIENT_SCOPE: (
+        "The OAuth client token does not grant the required scope."
+    ),
 }
 
 

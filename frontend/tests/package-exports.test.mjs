@@ -8,6 +8,8 @@ import * as react from "../packages/react/dist/index.js";
 
 test("headless public package barrels load in one consumer runtime", async () => {
   assert.equal(typeof core.AuthClient, "function");
+  assert.equal(typeof core.createOAuthAuthorizationRequest, "function");
+  assert.equal(typeof core.OAuthTokenClient, "function");
   assert.equal(typeof core.safeRedirectPath, "function");
   assert.equal(typeof react.AuthProvider, "function");
   assert.equal(typeof react.useCurrentUser, "function");

@@ -26,6 +26,7 @@ class AuthTableNames:
     session: str = "identity_auth_session"
     refresh_token: str = "identity_auth_refresh_token"
     websocket_ticket: str = "identity_websocket_ticket"
+    authorization_code: str = "identity_oauth_authorization_code"
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,6 +37,7 @@ class AuthModelSet:
     session: type[Any]
     refresh_token: type[Any]
     websocket_ticket: type[Any]
+    authorization_code: type[Any] | None = None
 
 
 def _timestamps() -> tuple[Any, Any]:
@@ -115,6 +117,8 @@ def create_auth_models(
         Column("revoked_at", DateTime(timezone=True), nullable=True, index=True),
         Column("ip_address", String(64), nullable=True),
         Column("user_agent", String(512), nullable=True),
+        Column("oauth_client_id", String(128), nullable=True, index=True),
+        Column("scope", String(1024), nullable=True),
         *_timestamps(),
     )
     refresh_table = Table(
@@ -132,6 +136,28 @@ def create_auth_models(
         Column("expires_at", DateTime(timezone=True), nullable=False, index=True),
         Column("used_at", DateTime(timezone=True), nullable=True),
         Column("revoked_at", DateTime(timezone=True), nullable=True, index=True),
+        *_timestamps(),
+    )
+    authorization_code_table = Table(
+        names.authorization_code,
+        metadata,
+        Column("id", String(36), primary_key=True),
+        Column(
+            "user_id",
+            user_pk.type.copy(),
+            ForeignKey(user_target, ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
+        Column("code_hash", String(64), nullable=False, unique=True, index=True),
+        Column("state_hash", String(64), nullable=False),
+        Column("client_id", String(128), nullable=False, index=True),
+        Column("redirect_uri", String(2048), nullable=False),
+        Column("scope", String(1024), nullable=False, default=""),
+        Column("code_challenge", String(128), nullable=False),
+        Column("code_challenge_method", String(16), nullable=False),
+        Column("expires_at", DateTime(timezone=True), nullable=False, index=True),
+        Column("used_at", DateTime(timezone=True), nullable=True, index=True),
         *_timestamps(),
     )
     ticket_table = Table(
@@ -164,6 +190,11 @@ def create_auth_models(
         password_reset=_map(registry, "PasswordResetCodeORM", password_reset_table),
         session=_map(registry, "AuthSessionORM", session_table),
         refresh_token=_map(registry, "AuthRefreshTokenORM", refresh_table),
+        authorization_code=_map(
+            registry,
+            "OAuthAuthorizationCodeORM",
+            authorization_code_table,
+        ),
         websocket_ticket=_map(registry, "WebSocketTicketORM", ticket_table),
     )
 

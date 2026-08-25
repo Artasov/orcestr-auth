@@ -1,6 +1,6 @@
 """Reusable authentication primitives and framework adapters."""
 
-from .config import AuthConfig, CookieConfig, OAuthClientConfig
+from .config import AuthConfig, CookieConfig, OAuth2ClientConfig, OAuthClientConfig
 from .errors import AUTH_ERROR_MESSAGES, AuthErrorCode, auth_api_error
 from .passwords import hash_password, verify_and_update_password, verify_password
 from .ports import AuditSink, Clock, RateLimiter, UserRepository
@@ -13,6 +13,7 @@ __all__ = [
     "Clock",
     "CookieConfig",
     "OAuthClientConfig",
+    "OAuth2ClientConfig",
     "RateLimiter",
     "TokenCodec",
     "TokenPayloadError",

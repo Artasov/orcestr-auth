@@ -28,6 +28,10 @@ def test_auth_models_share_consumer_metadata_and_user_fk() -> None:
         "identity_password_reset_code",
         "identity_auth_session",
         "identity_auth_refresh_token",
+        "identity_oauth_authorization_code",
         "identity_websocket_ticket",
     }
     assert expected.issubset(Base.metadata.tables)
+    assert models.session.__table__.c.oauth_client_id.nullable
+    assert models.session.__table__.c.scope.nullable
+    assert models.authorization_code.__table__.c.code_hash.unique

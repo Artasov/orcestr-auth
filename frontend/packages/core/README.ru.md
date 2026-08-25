@@ -23,6 +23,7 @@ npm install @orcestr/core @orcestr/auth-core
 - проверка безопасного внутреннего `next` и helpers для auth URL;
 - OAuth authorize URL для GitHub, Google и Яндекса;
 - lifecycle browser state и PKCE verifier.
+- stateless OAuth 2.1 authorization-code + PKCE helpers для public/native clients.
 
 ## Использование
 
@@ -57,6 +58,52 @@ const next = safeRedirectPath(searchParams.get('next'), '/overview');
 включая пароли и токены, автоматически скрываются.
 
 Навигация и product-specific fallback targets остаются в приложении.
+
+## OAuth 2.1 для public/native clients
+
+Desktop, mobile и другие public clients могут собрать authorization request и обменять код,
+не включая client secret в приложение:
+
+```ts
+import {
+    OAuthTokenClient,
+    createOAuthAuthorizationRequest,
+    parseOAuthCallback,
+} from '@orcestr/auth-core';
+
+const redirectUri = 'com.example.desktop://oauth/callback';
+const pending = await createOAuthAuthorizationRequest({
+    authorizationEndpoint: 'https://auth.example.com/oauth/authorize',
+    clientId: 'my-desktop-app',
+    redirectUri,
+    scope: ['profile'],
+});
+
+await openExternal(pending.authorizationUrl);
+
+const callback = parseOAuthCallback(receivedDeepLink, {
+    expectedState: pending.state,
+    expectedRedirectUri: redirectUri,
+});
+const tokens = await new OAuthTokenClient({
+    tokenEndpoint: 'https://auth.example.com/oauth/token',
+    clientId: 'my-desktop-app',
+}).exchangeAuthorizationCode({
+    code: callback.code,
+    redirectUri,
+    codeVerifier: pending.codeVerifier,
+});
+```
+
+`createOAuthAuthorizationRequest` использует криптографически стойкие state и PKCE S256. SDK
+не сохраняет state, verifier и полученные токены. Данные незавершённого flow хранятся только на
+время authorization round trip, а приложение само выбирает память или защищённое системное
+хранилище для токенов. Custom redirect scheme должен быть зарегистрирован в native-приложении
+и точно добавлен в allowlist его OAuth client на authorization server. При разборе полного
+callback URL всегда передавай `expectedRedirectUri`. Authorization и token endpoints должны
+использовать HTTPS; HTTP разрешён только для `localhost`, `127.0.0.1` и `::1` при локальной
+разработке. Встроенные credentials, query string и fragment отклоняются; authorization extensions
+передаются через `additionalParameters`.
 
 ## Ошибки
 

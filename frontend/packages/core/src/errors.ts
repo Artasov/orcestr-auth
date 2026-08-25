@@ -36,6 +36,11 @@ export const AUTH_ERROR_CODES = {
   oauthOriginNotAllowed: "oauth_origin_not_allowed",
   oauthRedirectUriNotAllowed: "oauth_redirect_uri_not_allowed",
   oauthEmailMissing: "oauth_email_missing",
+  oauthScopeInvalid: "oauth_scope_invalid",
+  oauth2ClientTokenRequired: "oauth2_client_token_required",
+  oauth2ClientTokenNotAllowed: "oauth2_client_token_not_allowed",
+  oauth2ClientTokenInvalid: "oauth2_client_token_invalid",
+  oauth2InsufficientScope: "oauth2_insufficient_scope",
 } as const;
 
 export type AuthErrorCode =

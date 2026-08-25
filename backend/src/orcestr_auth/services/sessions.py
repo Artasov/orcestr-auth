@@ -58,8 +58,10 @@ class AuthSessionService:
         *,
         ip_address: str | None = None,
         user_agent: str | None = None,
+        oauth_client_id: str | None = None,
+        scope: str | None = None,
     ) -> AuthTokens:
-        now = self.now()
+        now = aware_utc(self.now())
         expires_at = now + timedelta(days=self.config.refresh_token_days)
         session_id = str(uuid4())
         raw_refresh = self.new_refresh_token()
@@ -71,6 +73,8 @@ class AuthSessionService:
                 last_used_at=now,
                 ip_address=(ip_address or "")[:64] or None,
                 user_agent=(user_agent or "")[:512] or None,
+                oauth_client_id=oauth_client_id,
+                scope=scope,
             )
         )
         await self.db.flush()
@@ -85,7 +89,10 @@ class AuthSessionService:
         await self.db.flush()
         return AuthTokens(
             access_token=self.codec.create_access_token(
-                self.users.user_id(user), session_id=session_id
+                self.users.user_id(user),
+                session_id=session_id,
+                client_id=oauth_client_id,
+                scope=scope,
             ),
             refresh_token=raw_refresh,
         )
@@ -96,6 +103,8 @@ class AuthSessionService:
         *,
         ip_address: str | None = None,
         user_agent: str | None = None,
+        oauth_client_id: str | None = None,
+        scope: str | None = None,
     ) -> AuthTokens:
         if not raw_refresh:
             raise AuthSessionError(AuthErrorCode.REFRESH_TOKEN_MISSING)
@@ -115,7 +124,9 @@ class AuthSessionService:
         )
         if auth_session is None:
             raise AuthSessionError(AuthErrorCode.REFRESH_TOKEN_INVALID)
-        now = self.now()
+        if oauth_client_id != auth_session.oauth_client_id:
+            raise AuthSessionError(AuthErrorCode.REFRESH_TOKEN_INVALID)
+        now = aware_utc(self.now())
         if token.used_at is not None or token.revoked_at is not None:
             await self._revoke_session(auth_session.id, now)
             await self.db.commit()
@@ -133,8 +144,16 @@ class AuthSessionService:
             await self._revoke_session(auth_session.id, now)
             await self.db.commit()
             raise AuthSessionError(AuthErrorCode.USER_INACTIVE)
+        effective_scope = auth_session.scope
+        if scope is not None:
+            granted = set((auth_session.scope or "").split())
+            requested = set(scope.split())
+            if not requested.issubset(granted):
+                raise AuthSessionError(AuthErrorCode.OAUTH_SCOPE_INVALID)
+            effective_scope = scope
         token.used_at = now
         auth_session.last_used_at = now
+        auth_session.scope = effective_scope
         if ip_address:
             auth_session.ip_address = ip_address[:64]
         if user_agent:
@@ -151,7 +170,10 @@ class AuthSessionService:
         await self.db.flush()
         return AuthTokens(
             access_token=self.codec.create_access_token(
-                self.users.user_id(user), session_id=auth_session.id
+                self.users.user_id(user),
+                session_id=auth_session.id,
+                client_id=auth_session.oauth_client_id,
+                scope=effective_scope,
             ),
             refresh_token=next_refresh,
         )
@@ -161,21 +183,30 @@ class AuthSessionService:
         raw_refresh: str | None,
         *,
         session_id: str | None = None,
+        oauth_client_id: str | None = None,
         commit: bool = True,
-    ) -> None:
+    ) -> bool:
         resolved = session_id
         if raw_refresh:
             found = await self.db.scalar(
-                select(self.models.refresh_token.session_id).where(
+                select(self.models.refresh_token.session_id)
+                .join(
+                    self.models.session,
+                    self.models.session.id == self.models.refresh_token.session_id,
+                )
+                .where(
                     self.models.refresh_token.token_hash
-                    == self.token_hash(raw_refresh)
+                    == self.token_hash(raw_refresh),
+                    self.models.session.oauth_client_id == oauth_client_id,
                 )
             )
             resolved = str(found) if found else resolved
+        revoked = False
         if resolved:
-            await self._revoke_session(resolved, self.now())
+            revoked = await self._revoke_session(resolved, aware_utc(self.now()))
         if commit:
             await self.db.commit()
+        return revoked
 
     async def revoke_user_sessions(self, user_id: Any) -> None:
         session_ids = list(
@@ -186,12 +217,12 @@ class AuthSessionService:
                 )
             )
         )
-        now = self.now()
+        now = aware_utc(self.now())
         for session_id in session_ids:
             await self._revoke_session(str(session_id), now)
 
-    async def _revoke_session(self, session_id: str, revoked_at: datetime) -> None:
-        await self.db.execute(
+    async def _revoke_session(self, session_id: str, revoked_at: datetime) -> bool:
+        revoked_session = await self.db.execute(
             update(self.models.session)
             .where(
                 self.models.session.id == session_id,
@@ -207,3 +238,4 @@ class AuthSessionService:
             )
             .values(revoked_at=revoked_at)
         )
+        return revoked_session.rowcount == 1
