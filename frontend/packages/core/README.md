@@ -23,6 +23,7 @@ npm install @orcestr/core @orcestr/auth-core
 - safe internal `next` validation and auth URL helpers;
 - GitHub, Google and Yandex OAuth authorize URLs;
 - browser state and PKCE verifier lifecycle.
+- stateless OAuth 2.1 authorization-code + PKCE helpers for public/native clients.
 
 ## Usage
 
@@ -57,6 +58,51 @@ const next = safeRedirectPath(searchParams.get('next'), '/overview');
 passwords and tokens are redacted automatically.
 
 Applications own navigation and product-specific fallback targets.
+
+## OAuth 2.1 public/native clients
+
+Desktop, mobile and other public clients can build an authorization request and exchange its
+code without shipping a client secret:
+
+```ts
+import {
+    OAuthTokenClient,
+    createOAuthAuthorizationRequest,
+    parseOAuthCallback,
+} from '@orcestr/auth-core';
+
+const redirectUri = 'com.example.desktop://oauth/callback';
+const pending = await createOAuthAuthorizationRequest({
+    authorizationEndpoint: 'https://auth.example.com/oauth/authorize',
+    clientId: 'my-desktop-app',
+    redirectUri,
+    scope: ['profile'],
+});
+
+await openExternal(pending.authorizationUrl);
+
+const callback = parseOAuthCallback(receivedDeepLink, {
+    expectedState: pending.state,
+    expectedRedirectUri: redirectUri,
+});
+const tokens = await new OAuthTokenClient({
+    tokenEndpoint: 'https://auth.example.com/oauth/token',
+    clientId: 'my-desktop-app',
+}).exchangeAuthorizationCode({
+    code: callback.code,
+    redirectUri,
+    codeVerifier: pending.codeVerifier,
+});
+```
+
+`createOAuthAuthorizationRequest` uses cryptographically secure state and PKCE S256. The SDK
+does not persist state, the verifier or returned tokens. Keep pending flow data only for the
+authorization round trip, and let the application choose memory or platform-secure storage for
+tokens. A custom redirect scheme must be registered by the native application and allowlisted
+exactly for its OAuth client on the authorization server. Always pass `expectedRedirectUri` when
+parsing a full callback URL. Authorization and token endpoints must use HTTPS, except for HTTP on
+`localhost`, `127.0.0.1` or `::1` during local development; embedded credentials, query strings
+and fragments are rejected. Pass authorization extensions through `additionalParameters`.
 
 ## Errors
 

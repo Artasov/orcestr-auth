@@ -22,6 +22,8 @@ class TokenCodec:
         user_id: int | str,
         *,
         session_id: str | None = None,
+        client_id: str | None = None,
+        scope: str | None = None,
     ) -> str:
         expires_at = datetime.now(UTC) + timedelta(
             minutes=self.config.access_token_minutes
@@ -31,6 +33,8 @@ class TokenCodec:
             "access",
             expires_at,
             session_id=session_id,
+            client_id=client_id,
+            scope=scope,
         )
 
     def create_websocket_ticket(self, user_id: int | str, ticket_id: str) -> str:
@@ -69,6 +73,8 @@ class TokenCodec:
         *,
         session_id: str | None = None,
         token_id: str | None = None,
+        client_id: str | None = None,
+        scope: str | None = None,
     ) -> str:
         payload: dict[str, Any] = {
             "sub": str(user_id),
@@ -81,6 +87,10 @@ class TokenCodec:
         }
         if session_id is not None:
             payload["sid"] = session_id
+        if client_id is not None:
+            payload["client_id"] = client_id
+        if scope is not None:
+            payload["scope"] = scope
         return jwt.encode(
             payload,
             self.config.secret_key,

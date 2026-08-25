@@ -2,6 +2,12 @@
 
 ## Next
 
+- Added stateless OAuth 2.1 public/native client helpers with secure state,
+  PKCE S256, validated callbacks and authorization-code/refresh token grants.
+- Added default-deny client-token isolation, server-session-backed scope guards, an optional
+  userinfo hook, strict native redirect schemes and `offline_access`-gated refresh tokens.
+- Prepared the 0.4.0 release of `@orcestr/auth-core`, `@orcestr/auth-react`
+  and `@orcestr/auth-next`, and the 0.5.0 release of `@orcestr/auth-forms`.
 - Updated `@orcestr/auth-forms` for the `@orcestr/ui` 0.7 component contract.
 - Added version-aware local legal-consent persistence and optional first-checkbox select-all behavior.
 - Added controlled OAuth placement before fields, after submit, or after navigation links.
