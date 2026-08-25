@@ -35,5 +35,10 @@
   "oauth_access_token_missing",
   "oauth_origin_not_allowed",
   "oauth_redirect_uri_not_allowed",
-  "oauth_email_missing"
+  "oauth_email_missing",
+  "oauth_scope_invalid",
+  "oauth2_client_token_required",
+  "oauth2_client_token_not_allowed",
+  "oauth2_client_token_invalid",
+  "oauth2_insufficient_scope"
 ]
