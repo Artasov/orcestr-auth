@@ -59,6 +59,24 @@ const next = safeRedirectPath(searchParams.get('next'), '/overview');
 
 Навигация и product-specific fallback targets остаются в приложении.
 
+## Альтернативный transport приложения
+
+`AuthClientContract<TUser>` — полный структурный контракт, который используют React adapter и
+готовые формы. Стандартный `AuthClient` реализует его через browser cookies. Native-приложение
+может реализовать те же методы через доверенный IPC bridge, сохранив поддержку email/password и
+provider OAuth:
+
+```ts
+import type { AuthClientContract, AuthUser } from '@orcestr/auth-core';
+
+export const nativeAuth: AuthClientContract<AuthUser> = createNativeAuthClient();
+```
+
+Реализация возвращает те же user/method contracts, включая `oauthCallback`, и отклоняет запросы
+через `ApiError` из `@orcestr/core`, чтобы React hooks и локализованные формы работали одинаково.
+Контракт не задаёт хранение токенов: native client должен держать access token вне renderer, а
+refresh token — в защищённом системном хранилище.
+
 ## OAuth 2.1 для public/native clients
 
 Desktop, mobile и другие public clients могут собрать authorization request и обменять код,

@@ -34,6 +34,10 @@ export function ProfileAction() {
 }
 ```
 
+`AuthProvider` принимает структурный `AuthClientContract` из `@orcestr/auth-core`. Существующий
+browser `AuthClient` по-прежнему подходит напрямую, а native-приложение может передать IPC-backed
+реализацию с теми же login, registration, recovery и provider OAuth методами.
+
 ## Hooks
 
 `useCurrentUser`, `useLogin`, `useRegister`, `useLogout`,

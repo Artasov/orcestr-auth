@@ -90,6 +90,33 @@ authorization action. Client IDs, PKCE, state, redirect URI and navigation remai
 `placement` accepts `before-fields`, `after-submit`, or `after-links` and works in both login
 and registration forms.
 
+### Custom OAuth transport and provider hints
+
+The web default still builds the provider URL and assigns it to `window.location.href`. Desktop
+and other hosted surfaces can replace only that transport while keeping the same buttons and
+legal-action orchestration:
+
+```tsx
+<LoginForm
+  methods={methods}
+  oauthLegalConsent={false}
+  oauthButtons={{
+    autoAuthorizeProvider: providerHint,
+    authorizeHandler: (provider, clientId, next, callbackPayload) =>
+      nativeAuthorize({ provider, clientId, next, callbackPayload }),
+  }}
+/>
+```
+
+`autoAuthorizeProvider` runs at most once per mounted button group, after the requested provider
+is both visible in `methods.allowed_oauth_providers` and configured with a non-empty client ID. It
+also waits while the form is disabled. This supports a trusted provider hint without making an
+unavailable provider start authorization.
+
+OAuth uses the `legalConsent` gate by default, exactly as before. Set `oauthLegalConsent={false}`
+only when an outer authorization flow presents and records the same documents; password login
+continues to use the configured legal gate.
+
 ## Versioned legal consent
 
 `LoginForm` and `RegisterForm` can guard password and OAuth actions with the same configurable

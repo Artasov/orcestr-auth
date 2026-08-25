@@ -47,7 +47,43 @@ export type AuthClientOptions = {
   logging?: boolean | CutieLogOptions;
 };
 
-export class AuthClient<TUser extends AuthUser = AuthUser> {
+/**
+ * Structural client boundary consumed by framework adapters and ready forms.
+ *
+ * Native and otherwise non-browser applications can implement this contract
+ * without inheriting the cookie-backed {@link AuthClient}. Keeping the full
+ * public surface, including routes and provider callbacks, also makes the
+ * browser client directly assignable without an adapter.
+ */
+export interface AuthClientContract<TUser extends AuthUser = AuthUser> {
+  readonly routes: AuthClientRoutes;
+  methods(origin?: string): Promise<AuthMethods>;
+  me(): Promise<TUser>;
+  login(
+    username: string,
+    password: string,
+    extraPayload?: Record<string, unknown>,
+  ): Promise<{ user: TUser }>;
+  register(payload: Record<string, unknown>): Promise<{ user: TUser }>;
+  refresh(): Promise<{ user?: TUser }>;
+  logout(): Promise<void>;
+  requestPasswordReset(email: string): Promise<void>;
+  confirmPasswordReset(payload: {
+    email: string;
+    code: string;
+    password: string;
+  }): Promise<void>;
+  sendVerificationCode(): Promise<{ sent: boolean }>;
+  confirmEmail(code: string): Promise<TUser>;
+  oauthCallback(
+    provider: OAuthProvider,
+    payload: Record<string, unknown>,
+  ): Promise<{ user: TUser }>;
+}
+
+export class AuthClient<TUser extends AuthUser = AuthUser>
+  implements AuthClientContract<TUser>
+{
   readonly routes: AuthClientRoutes;
   private readonly fetcher: typeof globalThis.fetch;
   private readonly logging: ReturnType<typeof resolveLogOptions> | null;

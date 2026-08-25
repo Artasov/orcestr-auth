@@ -91,6 +91,33 @@ Client ID, PKCE, state, redirect URI и навигация остаются вн
 `placement` принимает `before-fields`, `after-submit` или `after-links` и одинаково работает в
 формах входа и регистрации.
 
+### Custom OAuth transport и provider hints
+
+Web default по-прежнему собирает URL провайдера и присваивает его `window.location.href`. Desktop
+и другие hosted surfaces могут заменить только transport, сохранив те же кнопки и orchestration
+legal-действия:
+
+```tsx
+<LoginForm
+  methods={methods}
+  oauthLegalConsent={false}
+  oauthButtons={{
+    autoAuthorizeProvider: providerHint,
+    authorizeHandler: (provider, clientId, next, callbackPayload) =>
+      nativeAuthorize({ provider, clientId, next, callbackPayload }),
+  }}
+/>
+```
+
+`autoAuthorizeProvider` запускается не более одного раза на mounted группу кнопок и только после
+того, как запрошенный provider одновременно появился в `methods.allowed_oauth_providers` и получил
+непустой client ID. Пока форма disabled, запуск ожидает. Так trusted provider hint не может начать
+авторизацию через недоступного провайдера.
+
+По умолчанию OAuth использует gate `legalConsent`, как и раньше. Передавайте
+`oauthLegalConsent={false}` только когда внешний authorization flow показывает и сохраняет те же
+документы; password login продолжает использовать настроенный legal gate.
+
 ## Версионированное принятие документов
 
 `LoginForm` и `RegisterForm` могут защищать password- и OAuth-действия общей настраиваемой

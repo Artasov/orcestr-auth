@@ -59,6 +59,24 @@ passwords and tokens are redacted automatically.
 
 Applications own navigation and product-specific fallback targets.
 
+## Alternative application transports
+
+`AuthClientContract<TUser>` is the complete structural boundary used by the React adapter and
+ready forms. The standard `AuthClient` implements it with browser cookies. Native applications
+can instead implement the same methods over a trusted IPC bridge while preserving the existing
+email/password and provider OAuth capabilities:
+
+```ts
+import type { AuthClientContract, AuthUser } from '@orcestr/auth-core';
+
+export const nativeAuth: AuthClientContract<AuthUser> = createNativeAuthClient();
+```
+
+Implementations return the same user and method contracts as `AuthClient`, including
+`oauthCallback`, and reject with `ApiError` from `@orcestr/core` so React hooks and localized
+forms keep the same behavior. The contract does not prescribe token persistence; native clients
+should keep access tokens out of the renderer and store refresh tokens in platform-secure storage.
+
 ## OAuth 2.1 public/native clients
 
 Desktop, mobile and other public clients can build an authorization request and exchange its

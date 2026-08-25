@@ -2,7 +2,13 @@
 
 import { buildOAuthAuthorizeUrl, type OAuthProvider } from "@orcestr/auth-core";
 import { Button, Flex, type FlexProps } from "@orcestr/ui";
-import type { ComponentType } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  type ComponentType,
+} from "react";
 
 import { useAuthMessages } from "./i18n.js";
 
@@ -19,6 +25,13 @@ export type OAuthProviderButtonComponent =
 export type OAuthButtonsPlacement =
   "before-fields" | "after-submit" | "after-links";
 
+export type OAuthAuthorizeHandler = (
+  provider: OAuthProvider,
+  clientId: string,
+  next: string,
+  callbackPayload?: Record<string, unknown>,
+) => void | Promise<void>;
+
 export type OAuthButtonsOptions = {
   placement?: OAuthButtonsPlacement;
   direction?: "row" | "column";
@@ -30,6 +43,8 @@ export type OAuthButtonsOptions = {
   buttonComponents?: Partial<
     Record<OAuthProvider, OAuthProviderButtonComponent>
   >;
+  authorizeHandler?: OAuthAuthorizeHandler;
+  autoAuthorizeProvider?: OAuthProvider;
 };
 
 export type OAuthAuthorizeRequest = {
@@ -74,13 +89,70 @@ export function OAuthButtons({
   className,
   buttonComponent,
   buttonComponents,
+  authorizeHandler,
+  autoAuthorizeProvider,
   onAuthorize,
   disabled = false,
 }: OAuthButtonsProps) {
   const copy = useAuthMessages().oauth;
-  const visible = providers.filter((provider) =>
-    Boolean(clientIds[provider]?.trim()),
+  const autoAuthorizationStarted = useRef(false);
+  const visible = useMemo(
+    () =>
+      providers.filter((provider) => Boolean(clientIds[provider]?.trim())),
+    [clientIds, providers],
   );
+
+  const authorizeProvider = useCallback(
+    async (
+      provider: OAuthProvider,
+      callbackPayload?: Record<string, unknown>,
+    ) => {
+      const clientId = clientIds[provider] ?? "";
+      if (authorizeHandler) {
+        await authorizeHandler(provider, clientId, next, callbackPayload);
+        return;
+      }
+      window.location.href = await buildOAuthAuthorizeUrl({
+        provider,
+        clientId,
+        next,
+        callbackPayload,
+      });
+    },
+    [authorizeHandler, clientIds, next],
+  );
+
+  const requestAuthorization = useCallback(
+    async (provider: OAuthProvider) => {
+      const authorize = (callbackPayload?: Record<string, unknown>) =>
+        authorizeProvider(provider, callbackPayload);
+      if (onAuthorize) {
+        await onAuthorize({ provider, authorize });
+        return;
+      }
+      await authorize();
+    },
+    [authorizeProvider, onAuthorize],
+  );
+
+  useEffect(() => {
+    if (
+      autoAuthorizationStarted.current ||
+      disabled ||
+      !autoAuthorizeProvider ||
+      !visible.includes(autoAuthorizeProvider)
+    ) {
+      return;
+    }
+    autoAuthorizationStarted.current = true;
+    void requestAuthorization(autoAuthorizeProvider);
+  }, [
+    autoAuthorizeProvider,
+    disabled,
+    requestAuthorization,
+    visible,
+  ]);
+
   if (!visible.length) return null;
 
   return (
@@ -101,19 +173,9 @@ export function OAuthButtons({
           "{provider}",
           copy.providers[provider],
         );
-        const authorize = async (callbackPayload?: Record<string, unknown>) => {
-          window.location.href = await buildOAuthAuthorizeUrl({
-            provider,
-            clientId: clientIds[provider] ?? "",
-            next,
-            callbackPayload,
-          });
-        };
         const onClick = () => {
           if (disabled) return;
-          void (onAuthorize
-            ? onAuthorize({ provider, authorize })
-            : authorize());
+          void requestAuthorization(provider);
         };
 
         return (

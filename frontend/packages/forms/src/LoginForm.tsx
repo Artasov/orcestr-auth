@@ -20,6 +20,7 @@ export function LoginForm<TUser extends AuthUser = AuthUser>({
   forgotPasswordHref,
   registerHref,
   oauthButtons,
+  oauthLegalConsent = true,
   extraPayload,
   legalConsent,
   disabled = false,
@@ -30,6 +31,7 @@ export function LoginForm<TUser extends AuthUser = AuthUser>({
   forgotPasswordHref?: string;
   registerHref?: string;
   oauthButtons?: OAuthButtonsOptions;
+  oauthLegalConsent?: boolean;
   extraPayload?: Record<string, unknown> | (() => Record<string, unknown>);
   legalConsent?: AuthLegalConsentOptions;
   disabled?: boolean;
@@ -48,10 +50,15 @@ export function LoginForm<TUser extends AuthUser = AuthUser>({
       next={next}
       disabled={disabled}
       {...oauthButtons}
-      onAuthorize={({ authorize }) =>
-        legal.request((acceptedDocuments) =>
-          authorize(buildAuthLegalPayload(legalConsent, acceptedDocuments)),
-        )
+      onAuthorize={
+        oauthLegalConsent
+          ? ({ authorize }) =>
+              legal.request((acceptedDocuments) =>
+                authorize(
+                  buildAuthLegalPayload(legalConsent, acceptedDocuments),
+                ),
+              )
+          : undefined
       }
     />
   );
