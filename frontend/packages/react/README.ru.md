@@ -40,9 +40,16 @@ browser `AuthClient` по-прежнему подходит напрямую, а
 
 ## Hooks
 
-`useCurrentUser`, `useLogin`, `useRegister`, `useLogout`,
+`useAuthMethods`, `useCurrentUser`, `useLogin`, `useRegister`, `useLogout`,
 `usePasswordResetRequest`, `usePasswordResetConfirm`, `useEmailVerification` и
 `useAuthClient`.
+
+`useAuthMethods()` загружает способы входа для текущего origin браузера после гидратации.
+На сервере и при первом клиентском рендере состояние pending; обращения к `window` на сервере нет.
+Ключ запроса включает маршрут methods и origin. Native-хост может явно передать доверенный
+web origin: `useAuthMethods("https://app.example.com")`. Передайте `data`, `isPending`, `error`
+и callback `refetch` в соответствующие props LoginForm/RegisterForm (пример в README форм).
+Ошибки автоматически не повторяются; время свежести кэша — 30 секунд.
 
 Страницы, navigation callbacks и визуальные компоненты остаются в consumer. Готовые формы
 доступны отдельно в [`@orcestr/auth-forms`](https://github.com/Artasov/orcestr-auth/blob/main/frontend/packages/forms/README.ru.md).

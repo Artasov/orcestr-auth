@@ -12,6 +12,8 @@ export type AuthMessages = {
     password: string;
     error: string;
     backToLogin: string;
+    loadingMethods: string;
+    retry: string;
   };
   login: {
     username: string;
@@ -78,6 +80,8 @@ export const authMessages: Record<AuthLocale, AuthMessages> = {
       password: "Password",
       error: "Unable to complete the request.",
       backToLogin: "Back to sign in",
+      loadingMethods: "Loading sign-in methods…",
+      retry: "Try again",
     },
     login: {
       username: "Email or username",
@@ -199,6 +203,8 @@ export const authMessages: Record<AuthLocale, AuthMessages> = {
       password: "Пароль",
       error: "Не удалось выполнить запрос.",
       backToLogin: "Вернуться ко входу",
+      loadingMethods: "Загружаем способы входа…",
+      retry: "Повторить",
     },
     login: {
       username: "Email или логин",

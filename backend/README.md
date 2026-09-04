@@ -191,6 +191,13 @@ the new authorization-code table and nullable client/scope session bindings.
 
 ## Security Model
 
+For FastAPI OAuth callbacks, configure `OAuthRedirectPolicy` with the application's trusted
+`allowed_origins`/`allowed_domains`. `allow_localhost=True` additionally accepts localhost,
+its subdomains (for example `deliveries.localhost`), `127.0.0.1` and `::1` over HTTP/HTTPS.
+Enable this option only in development. Lookalikes such as `localhost.example.com` are not
+included. Register the exact callback URI with each OAuth provider separately; this policy
+only controls which origins the application accepts.
+
 - browser tokens live in HttpOnly cookies and never appear in browser auth JSON;
 - cookie mutations require the configured CSRF header;
 - refresh tokens are opaque, hashed, rotated and replay-protected;

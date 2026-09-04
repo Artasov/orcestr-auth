@@ -2,6 +2,12 @@
 
 ## Next
 
+- Allowed `.localhost` OAuth callback origins when the FastAPI development policy explicitly
+  enables localhost, while continuing to reject lookalike domains.
+- Added `useAuthMethods` with hydration-safe browser-origin discovery and origin-scoped caching.
+- Added localized loading/error/retry states for login and registration method discovery.
+- Prepared patch releases `orcestr-auth` 0.4.2, `@orcestr/auth-react` 0.4.2 and
+  `@orcestr/auth-forms` 0.5.2.
 - Added a structural `AuthClientContract` for browser-compatible native/IPC transports while
   keeping the existing `AuthClient` and provider OAuth surface directly assignable.
 - Added an optional OAuth button authorization transport, one-shot visible-provider hints and an

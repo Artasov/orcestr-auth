@@ -193,6 +193,13 @@ schemes и malformed URI отклоняются до точного сравне
 
 ## Модель безопасности
 
+Для FastAPI OAuth callback настройте `OAuthRedirectPolicy` с доверенными
+`allowed_origins`/`allowed_domains` приложения. `allow_localhost=True` дополнительно разрешает
+localhost, его поддомены (например, `deliveries.localhost`), `127.0.0.1` и `::1` по HTTP/HTTPS.
+Включайте опцию только в development. Похожие адреса вроде `localhost.example.com` не входят
+в это разрешение. Точный callback URI нужно отдельно зарегистрировать у OAuth-провайдера:
+эта политика определяет только origins, которые принимает приложение.
+
 - browser tokens находятся в HttpOnly cookies и не возвращаются в browser auth JSON;
 - cookie mutations требуют настроенный CSRF header;
 - refresh tokens opaque, хешируются, ротируются и защищены от replay;

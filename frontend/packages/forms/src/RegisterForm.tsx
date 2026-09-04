@@ -13,6 +13,7 @@ import {
   useAuthLegalConsent,
 } from "./LegalConsent.js";
 import { OAuthButtons, type OAuthButtonsOptions } from "./OAuthButtons.js";
+import { AuthMethodsStatus, type AuthMethodsStatusProps } from "./AuthMethodsStatus.js";
 
 export function RegisterForm<TUser extends AuthUser = AuthUser>({
   loginHref,
@@ -20,6 +21,9 @@ export function RegisterForm<TUser extends AuthUser = AuthUser>({
   legalContent,
   onSuccess,
   methods,
+  methodsPending,
+  methodsError,
+  onRetryMethods,
   next = "/overview",
   disabled = false,
   oauthButtons,
@@ -34,7 +38,7 @@ export function RegisterForm<TUser extends AuthUser = AuthUser>({
   disabled?: boolean;
   oauthButtons?: OAuthButtonsOptions;
   legalConsent?: AuthLegalConsentOptions;
-}) {
+} & AuthMethodsStatusProps) {
   const copy = useAuthMessages();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -49,7 +53,7 @@ export function RegisterForm<TUser extends AuthUser = AuthUser>({
       providers={methods?.allowed_oauth_providers ?? []}
       clientIds={methods?.oauth_client_ids ?? {}}
       next={next}
-      disabled={disabled}
+      disabled={disabled || methodsPending || Boolean(methodsError)}
       {...oauthButtons}
       onAuthorize={({ authorize }) =>
         legal.request((acceptedDocuments) =>
@@ -62,6 +66,7 @@ export function RegisterForm<TUser extends AuthUser = AuthUser>({
     <form
       onSubmit={(event) => {
         event.preventDefault();
+        if (disabled || methodsPending || methodsError || methods?.email_password_allowed === false) return;
         const extension =
           typeof extraPayload === "function" ? extraPayload() : extraPayload;
         legal.request((acceptedDocuments) => {
@@ -81,6 +86,7 @@ export function RegisterForm<TUser extends AuthUser = AuthUser>({
       }}
     >
       <Flex col g="3">
+        <AuthMethodsStatus methodsPending={methodsPending} methodsError={methodsError} onRetryMethods={onRetryMethods} />
         {oauthPlacement === "before-fields" ? oauthBlock : null}
         <AuthFormError error={mutation.error} fallback={copy.common.error} />
         <AuthField label={copy.register.username}>
@@ -126,6 +132,7 @@ export function RegisterForm<TUser extends AuthUser = AuthUser>({
           size={3}
           disabled={
             disabled ||
+            methodsPending || Boolean(methodsError) ||
             mutation.isPending ||
             methods?.email_password_allowed === false ||
             !email ||
