@@ -2,6 +2,7 @@ export * from "./ChangePasswordForm.js";
 export * from "./ForgotPasswordForm.js";
 export * from "./i18n.js";
 export * from "./LoginForm.js";
+export * from "./AuthMethodsStatus.js";
 export * from "./LegalConsent.js";
 export * from "./legalConsentStorage.js";
 export * from "./OAuthButtons.js";

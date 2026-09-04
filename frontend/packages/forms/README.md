@@ -54,6 +54,38 @@ Forms expose callbacks, links, slots and product extensions such as registration
 
 ## OAuth button components
 
+### Loading available methods
+
+Load methods through the headless hook and pass its state to the form:
+
+```tsx
+import { useAuthMethods } from "@orcestr/auth-react";
+import { LoginForm } from "@orcestr/auth-forms";
+
+function Login() {
+  const methods = useAuthMethods();
+  return <LoginForm
+    methods={methods.data}
+    methodsPending={methods.isPending}
+    methodsError={methods.error}
+    onRetryMethods={() => void methods.refetch()}
+  />;
+}
+```
+
+RegisterForm accepts the same props. Pending/error states render a localized status or retry
+button and block submission/OAuth, instead of silently rendering an incomplete form.
+`AuthMethodsStatus` is also exported for custom form compositions.
+
+A provider is visible only when it is both allowed by `allowed_oauth_providers` and has a
+non-empty `oauth_client_ids[provider]`. An allowed provider without credentials is intentionally
+hidden. A failed `/auth/methods/` request is a separate error, not an empty provider list.
+
+For subdomain development origins such as `http://deliveries.localhost:8934`, the backend must
+enable `OAuthRedirectPolicy(allow_localhost=True)` in development only. Production origins must
+be configured explicitly. The OAuth provider must also accept the exact callback URI; allowing
+an origin in this library does not register it in Google/GitHub's console.
+
 OAuth providers use the standard full-width button by default. A product can replace all provider
 buttons with one component, override individual providers, and choose the group layout without
 copying authorization logic:

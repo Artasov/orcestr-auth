@@ -55,6 +55,38 @@ errors, и к подписям формы.
 
 ## Компоненты OAuth-кнопок
 
+### Загрузка способов входа
+
+Получайте методы через headless-хук и передавайте состояние в форму:
+
+```tsx
+import { useAuthMethods } from "@orcestr/auth-react";
+import { LoginForm } from "@orcestr/auth-forms";
+
+function Login() {
+  const methods = useAuthMethods();
+  return <LoginForm
+    methods={methods.data}
+    methodsPending={methods.isPending}
+    methodsError={methods.error}
+    onRetryMethods={() => void methods.refetch()}
+  />;
+}
+```
+
+RegisterForm принимает те же props. Во время загрузки/ошибки формы показывают локализованный
+статус или кнопку повтора и блокируют отправку/OAuth, а не молча скрывают недоступные методы.
+`AuthMethodsStatus` также экспортируется для собственных композиций форм.
+
+Провайдер виден, только если разрешён в `allowed_oauth_providers` и имеет непустой
+`oauth_client_ids[provider]`. Разрешённый провайдер без credentials намеренно скрыт.
+Ошибка `/auth/methods/` — отдельное состояние, а не пустой список провайдеров.
+
+Для локальных поддоменов вроде `http://deliveries.localhost:8934` backend должен включать
+`OAuthRedirectPolicy(allow_localhost=True)` только в development. Production origins задаются
+явно. Сам OAuth-провайдер тоже должен принимать точный callback URI: разрешение origin в
+библиотеке не регистрирует адрес в консоли Google/GitHub.
+
 По умолчанию OAuth-провайдеры отображаются стандартными полноразмерными кнопками. Продукт может
 одним компонентом заменить все кнопки, отдельно переопределить нужных провайдеров и выбрать
 компоновку группы, не копируя логику авторизации:

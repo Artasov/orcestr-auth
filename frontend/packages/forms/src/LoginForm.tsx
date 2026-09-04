@@ -13,9 +13,13 @@ import {
   useAuthLegalConsent,
 } from "./LegalConsent.js";
 import { OAuthButtons, type OAuthButtonsOptions } from "./OAuthButtons.js";
+import { AuthMethodsStatus, type AuthMethodsStatusProps } from "./AuthMethodsStatus.js";
 
 export function LoginForm<TUser extends AuthUser = AuthUser>({
   methods,
+  methodsPending,
+  methodsError,
+  onRetryMethods,
   next = "/overview",
   forgotPasswordHref,
   registerHref,
@@ -36,7 +40,7 @@ export function LoginForm<TUser extends AuthUser = AuthUser>({
   legalConsent?: AuthLegalConsentOptions;
   disabled?: boolean;
   onSuccess?: (user: TUser) => void;
-}) {
+} & AuthMethodsStatusProps) {
   const copy = useAuthMessages();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -48,7 +52,7 @@ export function LoginForm<TUser extends AuthUser = AuthUser>({
       providers={methods?.allowed_oauth_providers ?? []}
       clientIds={methods?.oauth_client_ids ?? {}}
       next={next}
-      disabled={disabled}
+      disabled={disabled || methodsPending || Boolean(methodsError)}
       {...oauthButtons}
       onAuthorize={
         oauthLegalConsent
@@ -66,6 +70,7 @@ export function LoginForm<TUser extends AuthUser = AuthUser>({
     <form
       onSubmit={(event) => {
         event.preventDefault();
+        if (disabled || methodsPending || methodsError || methods?.email_password_allowed === false) return;
         legal.request((acceptedDocuments) => {
           const extension =
             typeof extraPayload === "function" ? extraPayload() : extraPayload;
@@ -84,6 +89,7 @@ export function LoginForm<TUser extends AuthUser = AuthUser>({
       }}
     >
       <Flex col g="3">
+        <AuthMethodsStatus methodsPending={methodsPending} methodsError={methodsError} onRetryMethods={onRetryMethods} />
         {oauthPlacement === "before-fields" ? oauthBlock : null}
         <AuthFormError error={mutation.error} fallback={copy.common.error} />
         <AuthField label={copy.login.username}>
@@ -108,6 +114,7 @@ export function LoginForm<TUser extends AuthUser = AuthUser>({
           size={3}
           disabled={
             disabled ||
+            methodsPending || Boolean(methodsError) ||
             mutation.isPending ||
             methods?.email_password_allowed === false
           }

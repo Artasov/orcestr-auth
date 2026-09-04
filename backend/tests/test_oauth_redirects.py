@@ -23,6 +23,27 @@ def test_callback_policy_accepts_configured_subdomains() -> None:
     policy.validate_callback_uri(request(), "github", callback)
 
 
+@pytest.mark.parametrize(
+    "host",
+    ["localhost", "127.0.0.1", "[::1]", "deliveries.localhost", "beauty.localhost"],
+)
+def test_local_origins_require_explicit_development_opt_in(host: str) -> None:
+    origin = f"http://{host}:8934"
+    policy = OAuthRedirectPolicy(allow_localhost=True)
+    assert policy.origin(request(), origin) == origin
+    policy.validate_callback_uri(request(), "google", f"{origin}/auth/oauth/google/callback")
+    with pytest.raises(ApiError):
+        OAuthRedirectPolicy().origin(request(), origin)
+
+
+@pytest.mark.parametrize(
+    "host", ["notlocalhost", "localhost.evil.test", "deliveries.localhost.evil.test"],
+)
+def test_local_origin_policy_rejects_lookalike_hosts(host: str) -> None:
+    with pytest.raises(ApiError):
+        OAuthRedirectPolicy(allow_localhost=True).origin(request(), f"http://{host}:8934")
+
+
 def test_callback_policy_rejects_external_and_wrong_paths() -> None:
     policy = OAuthRedirectPolicy(allowed_domains=("example.com",))
     with pytest.raises(ApiError) as external:

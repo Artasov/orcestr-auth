@@ -29,7 +29,10 @@ class OAuthRedirectPolicy:
         if origin is None:
             return False
         hostname = (urlparse(origin).hostname or "").lower()
-        if self.allow_localhost and hostname in {"localhost", "127.0.0.1", "::1"}:
+        if self.allow_localhost and (
+            hostname in {"localhost", "127.0.0.1", "::1"}
+            or hostname.endswith(".localhost")
+        ):
             return True
         configured_origins = {
             clean

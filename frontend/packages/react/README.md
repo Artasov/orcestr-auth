@@ -41,9 +41,16 @@ OAuth surface.
 
 ## Hooks
 
-`useCurrentUser`, `useLogin`, `useRegister`, `useLogout`,
+`useAuthMethods`, `useCurrentUser`, `useLogin`, `useRegister`, `useLogout`,
 `usePasswordResetRequest`, `usePasswordResetConfirm`, `useEmailVerification` and
 `useAuthClient`.
+
+`useAuthMethods()` loads available login methods for the current browser origin after hydration.
+Its SSR/first-client state is pending and does not access `window` during rendering on the server.
+The query key includes the methods route and origin. Native hosts can pass an explicit trusted
+web origin: `useAuthMethods("https://app.example.com")`. Pass `data`, `isPending`, `error` and a
+`refetch` callback to the matching props of LoginForm/RegisterForm (see the forms README).
+Failed requests are not automatically retried; stale data is cached for 30 seconds.
 
 Pages, navigation callbacks and visual components remain consumer-owned. Ready forms are
 available separately in [`@orcestr/auth-forms`](https://github.com/Artasov/orcestr-auth/tree/main/frontend/packages/forms#readme).
