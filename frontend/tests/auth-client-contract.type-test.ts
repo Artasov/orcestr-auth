@@ -78,11 +78,11 @@ const providerProps: Parameters<typeof AuthProvider<NativeUser>>[0] = {
 
 void providerProps;
 
-const legacyHookResult: AuthClient<NativeUser> = null as unknown as ReturnType<
+const browserHookResult: AuthClientContract<NativeUser> = null as unknown as ReturnType<
   typeof useAuthClient<NativeUser>
 >;
 
-void legacyHookResult;
+void browserHookResult;
 
 const authorizeHandler: OAuthAuthorizeHandler = async (
   provider,

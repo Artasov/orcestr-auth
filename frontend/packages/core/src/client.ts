@@ -44,6 +44,7 @@ export type AuthClientRoutes = {
 export type AuthClientOptions = {
   routes: AuthClientRoutes;
   fetch?: typeof globalThis.fetch;
+  session?: AuthSessionManager;
   logging?: boolean | CutieLogOptions;
 };
 
@@ -107,7 +108,7 @@ export class AuthClient<TUser extends AuthUser = AuthUser>
                 : "AUTH",
           })
         : null;
-    this.session = new AuthSessionManager({
+    this.session = options.session ?? new AuthSessionManager({
       execute: (input, init) => this.fetch(requestUrl(input), init ?? {}),
       refresh: () =>
         this.fetch(this.routes.refresh, {

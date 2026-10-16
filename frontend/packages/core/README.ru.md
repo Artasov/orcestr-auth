@@ -59,6 +59,11 @@ const next = safeRedirectPath(searchParams.get('next'), '/overview');
 
 Навигация и product-specific fallback targets остаются в приложении.
 
+Передайте общий `AuthSessionManager` в `new AuthClient({routes, session})` и вызывайте
+`session.request()` для API приложения, чтобы запросы вместе обновляли cookie.
+`refreshFailed` означает отказ авторизации при refresh (401/403) или повторный 401.
+Серверные ошибки refresh сохраняют свой статус, сетевые ошибки отклоняют запрос.
+
 ## Альтернативный transport приложения
 
 `AuthClientContract<TUser>` — полный структурный контракт, который используют React adapter и
