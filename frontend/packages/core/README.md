@@ -59,6 +59,11 @@ passwords and tokens are redacted automatically.
 
 Applications own navigation and product-specific fallback targets.
 
+Pass the same `AuthSessionManager` as `new AuthClient({routes, session})` and use
+`session.request()` for your application API to share cookie refresh across clients.
+Only a rejected login (401/403), or a retry that still returns 401, sets `refreshFailed`.
+Refresh server errors retain their response status; network failures reject the request.
+
 ## Alternative application transports
 
 `AuthClientContract<TUser>` is the complete structural boundary used by the React adapter and

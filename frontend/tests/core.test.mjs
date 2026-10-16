@@ -180,6 +180,64 @@ test("failed refresh is reported without retrying the protected request", async 
   assert.equal(refreshCalls, 1);
 });
 
+test("SDK and application API share one refresh, including a delayed old 401", async () => {
+  let refreshCalls = 0;
+  let authenticated = false;
+  let releaseSlow;
+  const slow = new Promise(resolve => { releaseSlow = resolve; });
+  const session = new AuthSessionManager({
+    execute: async input => {
+      const expired = !authenticated;
+      if (input === "/slow" && expired) await slow;
+      return Response.json({id: 1, username: "user"}, {status: expired ? 401 : 200});
+    },
+    refresh: async () => {
+      refreshCalls++;
+      await new Promise(resolve => setTimeout(resolve, 5));
+      authenticated = true;
+      return new Response(null, {status: 204});
+    },
+  });
+  const client = new AuthClient({routes, session, fetch: () => {throw new Error("Unexpected independent transport");}});
+  const delayed = session.request("/slow");
+  const [user, tenant] = await Promise.all([client.me(), session.request("/tenants")]);
+  releaseSlow();
+  assert.equal(user.id, 1);
+  assert.equal(tenant.response.status, 200);
+  assert.equal((await delayed).response.status, 200);
+  assert.equal(refreshCalls, 1);
+});
+
+test("refresh outages retain their server status and do not expire the session", async () => {
+  const session = new AuthSessionManager({
+    execute: async () => new Response(null, {status: 401}),
+    refresh: async () => Response.json({error: {code: "unavailable", message: "Unavailable"}}, {status: 503}),
+  });
+  const results = await Promise.all([session.request("/me"), session.request("/tenant")]);
+  for (const result of results) {
+    assert.equal(result.refreshFailed, false);
+    assert.equal(result.response.status, 503);
+    assert.equal((await result.response.json()).error.code, "unavailable");
+  }
+});
+
+test("a refresh network failure propagates instead of reporting an expired login", async () => {
+  const offline = new TypeError("Network unavailable");
+  const session = new AuthSessionManager({
+    execute: async () => new Response(null, {status: 401}),
+    refresh: async () => {throw offline;},
+  });
+  await assert.rejects(session.request("/me"), error => error === offline);
+});
+
+test("a retried request still returning 401 expires the session", async () => {
+  const session = new AuthSessionManager({
+    execute: async () => new Response(null, {status: 401}),
+    refresh: async () => new Response(null, {status: 204}),
+  });
+  assert.equal((await session.request("/me")).refreshFailed, true);
+});
+
 test("structured API errors preserve their code and human-readable message", async () => {
   const client = new AuthClient({
     routes,

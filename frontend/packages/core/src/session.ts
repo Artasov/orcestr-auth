@@ -8,7 +8,8 @@ export type AuthSessionRequestResult = {
 export class AuthSessionManager {
   private readonly execute: ApiExecutor;
   private readonly refresh: () => Promise<Response>;
-  private refreshPromise: Promise<boolean> | null = null;
+  private refreshPromise: Promise<Response> | null = null;
+  private generation = 0;
 
   constructor(options: {
     execute: ApiExecutor;
@@ -23,24 +24,33 @@ export class AuthSessionManager {
     init?: RequestInit,
     options: { allowRefresh?: boolean } = {},
   ): Promise<AuthSessionRequestResult> {
+    const generation = this.generation;
     let response = await this.execute(input, init);
     if (response.status !== 401 || options.allowRefresh === false) {
       return { response, refreshFailed: false };
     }
-    if (!(await this.refreshOnce())) {
-      return { response, refreshFailed: true };
+    // A slow 401 can arrive after another request has already renewed cookies.
+    if (generation === this.generation) {
+      const refreshed = await this.refreshOnce();
+      if (!refreshed.ok) {
+        const expired = refreshed.status === 401 || refreshed.status === 403;
+        return {
+          response: expired ? response : refreshed.clone(),
+          refreshFailed: expired,
+        };
+      }
     }
     response = await this.execute(input, init);
-    return { response, refreshFailed: false };
+    return { response, refreshFailed: response.status === 401 };
   }
 
-  private refreshOnce(): Promise<boolean> {
+  private refreshOnce(): Promise<Response> {
     if (this.refreshPromise) return this.refreshPromise;
     this.refreshPromise = (async () => {
       try {
-        return (await this.refresh()).ok;
-      } catch {
-        return false;
+        const response = await this.refresh();
+        if (response.ok) this.generation += 1;
+        return response;
       } finally {
         this.refreshPromise = null;
       }
