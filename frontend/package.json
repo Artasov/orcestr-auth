@@ -30,51 +30,6 @@
     "sharp": "0.35.5"
   },
   "allowScripts": {
-    "sharp@0.35.3": true,
-    "sharp@0": [
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      [
-        null,
-        null,
-        null,
-        null,
-        null,
-        true
-      ]
-    ]
+    "sharp@0.35.5": true
   }
 }
