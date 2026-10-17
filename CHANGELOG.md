@@ -2,6 +2,9 @@
 
 ## Next
 
+- Support Orcestr UI 0.8 in auth forms and validate the workspace against UI 0.8.3.
+- Prepare `@orcestr/auth-forms` 0.5.3 with the corrected peer range.
+
 - Allowed `.localhost` OAuth callback origins when the FastAPI development policy explicitly
   enables localhost, while continuing to reject lookalike domains.
 - Added `useAuthMethods` with hydration-safe browser-origin discovery and origin-scoped caching.
